@@ -8,7 +8,7 @@ import FaqSection from "../components/FaqSection";
 import usePageTitle from "../hooks/usePageTitle"; 
 
 const Homepage = () => {
-  usePageTitle("Homepage");
+  usePageTitle("Beranda");
   return (
     <main className="bg-white text-black overflow-x-hidden">
       {/* Hero Section */}

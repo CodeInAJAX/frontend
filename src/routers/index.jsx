@@ -6,7 +6,8 @@ import About from "../pages/About";
 import Register from "../pages/Register";
 import Login from "../pages/Login";
 import Contact from "../pages/Contact";
-import OnlineCourse from "../pages/OnlineCourse";
+import Course from "../pages/Course";
+import CourseDetail from "../pages/CourseDetail";
 
 export const router = createBrowserRouter([
   {
@@ -17,7 +18,8 @@ export const router = createBrowserRouter([
       { path: "/", element: <Homepage /> },
       { path: "/about", element: <About /> },
       { path: "/contact", element: <Contact /> },
-      { path: "/online-course", element: <OnlineCourse /> },
+      { path: "/courses", element: <Course /> },
+      { path: "/course/:id", element: <CourseDetail /> },
     ],
   },
   {

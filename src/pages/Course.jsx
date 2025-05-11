@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import usePageTitle from "../hooks/usePageTitle";
 import { courseList } from "../utils/content";
+import { Link } from "react-router";
 
 const OnlineCourse = () => {
   usePageTitle("Kursus Online");
@@ -43,13 +44,18 @@ const OnlineCourse = () => {
             <div className="p-5">
               <h3 className="text-xl font-semibold mb-2">{course.title}</h3>
               <p className="text-sm mb-4 text-white/75">Mentor :{course.mentor}</p>
-              <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-semibold transition">
+              <Link to={`/course/${course.id}`}>
+              <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded font-semibold transition cursor-pointer">
                 Belajar Sekarang
-              </button>
+              </button>  
+              </Link>
             </div>
           </div>
         ))}
       </div>
+        {filteredCourses.length === 0 && (
+          <p className="flex justify-center text-gray-700">Kursus tidak ditemukan.</p>
+        )}
     </section>
   );
 };

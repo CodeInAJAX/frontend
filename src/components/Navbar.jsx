@@ -1,16 +1,10 @@
 import React, { useState } from 'react';
 import { NavLink } from "react-router";
 import logo from '../assets/codeinajaLogo.svg';
-
+import {links} from '../utils/content';
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const links = [
-    { name: "Beranda", to: "/" },
-    { name: "Tentang Kami", to: "/about" },
-    { name: "Kelas Online", to: "/online-course" },
-    { name: "Kontak", to: "/contact" }
-  ];
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
