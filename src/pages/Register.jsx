@@ -74,20 +74,6 @@ const Register = () => {
             Daftar
           </button>
         </form>
-
-        <div className="flex items-center my-4">
-          <hr className="flex-grow border-gray-300" />
-          <span className="mx-2 text-gray-500 text-sm">atau</span>
-          <hr className="flex-grow border-gray-300" />
-        </div>
-
-        <button
-          type="button"
-          className="w-full py-2 border border-orange-500 text-orange-500 font-semibold rounded-md hover:bg-orange-50 transition"
-        >
-          Masuk dengan Google
-        </button>
-
         <p className="text-center text-sm text-gray-600 mt-4">
           Sudah punya akun?{" "}
           <a href="/login" className="text-orange-500 font-medium">
