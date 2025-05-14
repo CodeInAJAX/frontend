@@ -13,6 +13,7 @@ import AdminLogin from "../pages/AdminLogin"
 import Payment from "../pages/Payment"
 import ProtectedRoute from "../components/ProtectedRoute"
 import MentorDashboard from "../pages/MentorDashboard"
+import UserProfile from "../pages/UserProfile"
 
 export const router = createBrowserRouter([
   {
@@ -37,6 +38,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Payment />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/profile",
+        element: (
+          <ProtectedRoute>
+            <UserProfile />
           </ProtectedRoute>
         ),
       },

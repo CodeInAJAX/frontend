@@ -5,6 +5,7 @@ import { NavLink, useNavigate } from "react-router"
 import logo from "../assets/codeinajaLogo.svg"
 import { links } from "../utils/content"
 import { useAuth } from "../context/authContext"
+import ProfileDropdown from "./ProfileDropdown"
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -26,6 +27,17 @@ const Navbar = () => {
     } else if (user?.role === "admin") {
       navigate("/admin")
     }
+  }
+
+  // Get initials for avatar fallback
+  const getInitials = () => {
+    if (!user?.name) return "U"
+    return user.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2)
   }
 
   return (
@@ -80,7 +92,6 @@ const Navbar = () => {
       <div className="hidden md:flex items-center space-x-4">
         {user ? (
           <div className="flex items-center space-x-4">
-            <span className="text-gray-700">Hi, {user.name}</span>
             {(user.role === "guru" || user.role === "admin") && (
               <button
                 onClick={handleDashboardClick}
@@ -89,12 +100,7 @@ const Navbar = () => {
                 Dashboard
               </button>
             )}
-            <button
-              onClick={handleLogout}
-              className="bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600 transition-colors"
-            >
-              Logout
-            </button>
+            <ProfileDropdown />
           </div>
         ) : (
           <>
@@ -131,7 +137,20 @@ const Navbar = () => {
             <div className="flex flex-col space-y-2 pt-2">
               {user ? (
                 <>
-                  <span className="text-gray-700">Hi, {user.name}</span>
+                  <div className="flex items-center space-x-2 py-2">
+                    {user?.photo ? (
+                      <img
+                        src={user.photo || "/placeholder.svg"}
+                        alt={user.name}
+                        className="w-8 h-8 rounded-full object-cover border-2 border-white"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-medium">
+                        {getInitials()}
+                      </div>
+                    )}
+                    <span className="text-gray-700">{user.name}</span>
+                  </div>
                   {(user.role === "guru" || user.role === "admin") && (
                     <button
                       onClick={() => {
