@@ -4,18 +4,30 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router"
 import { courseList } from "../utils/content"
 import { useAuth } from "../context/authContext"
-import { CheckCircle } from "lucide-react"
+import { CheckCircle, Star } from "lucide-react"
+import RatingModal from "../components/RatingModal"
+import CourseRatings from "../components/CourseRatings"
 
 const CourseDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { user, isCoursePurchased, updateLessonProgress, getCourseProgress, isLessonCompleted } = useAuth()
+  const {
+    user,
+    isCoursePurchased,
+    updateLessonProgress,
+    getCourseProgress,
+    isLessonCompleted,
+    isCourseCompleted,
+    hasUserRatedCourse,
+  } = useAuth()
 
   const courseId = Number.parseInt(id)
   const course = courseList.find((c) => c.id === courseId)
 
   const [currentVideo, setCurrentVideo] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showRatingModal, setShowRatingModal] = useState(false)
+  const [showRatingSection, setShowRatingSection] = useState(false)
 
   useEffect(() => {
     // Check if user is logged in
@@ -46,6 +58,9 @@ const CourseDetail = () => {
       setCurrentVideo(firstIncomplete || course.videos[0])
     }
 
+    // Determine if we should show the rating section
+    setShowRatingSection(true)
+
     setLoading(false)
   }, [user, course, courseId, id, isCoursePurchased, navigate, getCourseProgress])
 
@@ -68,6 +83,8 @@ const CourseDetail = () => {
   }
 
   const progress = getCourseProgress(courseId)
+  const courseCompleted = isCourseCompleted(courseId)
+  const hasRated = hasUserRatedCourse(courseId)
 
   return (
     <section className="min-h-screen px-4 py-16 md:px-12 bg-white">
@@ -85,6 +102,23 @@ const CourseDetail = () => {
             <div className="bg-orange-500 h-2.5 rounded-full" style={{ width: `${progress.progress}%` }}></div>
           </div>
         </div>
+
+        {/* Course Completion Banner */}
+        {courseCompleted && !hasRated && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex flex-col sm:flex-row items-center justify-between">
+            <div className="flex items-center mb-3 sm:mb-0">
+              <CheckCircle className="text-green-500 mr-2" size={20} />
+              <span className="text-green-700 font-medium">Selamat! Anda telah menyelesaikan kursus ini.</span>
+            </div>
+            <button
+              onClick={() => setShowRatingModal(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center"
+            >
+              <Star className="mr-2" size={16} />
+              Beri Rating
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
@@ -159,6 +193,26 @@ const CourseDetail = () => {
           )}
         </div>
       </div>
+
+      {/* Ratings Section */}
+      {showRatingSection && (
+        <div className="mt-12">
+          <CourseRatings courseId={courseId} />
+        </div>
+      )}
+
+      {/* Rating Modal */}
+      {showRatingModal && (
+        <RatingModal
+          courseId={courseId}
+          courseName={course.title}
+          onClose={() => setShowRatingModal(false)}
+          onRatingSubmitted={() => {
+            // Refresh the page to show the new rating
+            window.location.reload()
+          }}
+        />
+      )}
     </section>
   )
 }
