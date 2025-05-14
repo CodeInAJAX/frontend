@@ -16,12 +16,14 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [purchasedCourses, setPurchasedCourses] = useState([])
   const [courseProgress, setCourseProgress] = useState({})
+  const [courseRatings, setCourseRatings] = useState({})
 
   // Load user from localStorage on initial render
   useEffect(() => {
     const storedUser = localStorage.getItem("user")
     const storedPurchasedCourses = localStorage.getItem("purchasedCourses")
     const storedProgress = localStorage.getItem("courseProgress")
+    const storedRatings = localStorage.getItem("courseRatings")
 
     if (storedUser) {
       setUser(JSON.parse(storedUser))
@@ -33,6 +35,10 @@ export const AuthProvider = ({ children }) => {
 
     if (storedProgress) {
       setCourseProgress(JSON.parse(storedProgress))
+    }
+
+    if (storedRatings) {
+      setCourseRatings(JSON.parse(storedRatings))
     }
 
     setLoading(false)
@@ -56,6 +62,11 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem("courseProgress", JSON.stringify(courseProgress))
   }, [courseProgress])
+
+  // Save course ratings to localStorage
+  useEffect(() => {
+    localStorage.setItem("courseRatings", JSON.stringify(courseRatings))
+  }, [courseRatings])
 
   // Login function
   const login = (email, password) => {
@@ -141,6 +152,91 @@ export const AuthProvider = ({ children }) => {
     return course ? course.completed.includes(lessonId) : false
   }
 
+  // Check if a course is completed
+  const isCourseCompleted = (courseId) => {
+    const progress = getCourseProgress(courseId)
+    return progress.progress === 100
+  }
+
+  // Submit a rating for a course
+  const submitRating = async (courseId, ratingData) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        setCourseRatings((prev) => {
+          const courseRatingsList = prev[courseId] || []
+
+          // Check if user has already rated this course
+          const existingRatingIndex = courseRatingsList.findIndex((rating) => rating.userId === ratingData.userId)
+
+          let updatedRatings
+
+          if (existingRatingIndex >= 0) {
+            // Update existing rating
+            updatedRatings = [...courseRatingsList]
+            updatedRatings[existingRatingIndex] = {
+              ...ratingData,
+              likes: updatedRatings[existingRatingIndex].likes || [],
+            }
+          } else {
+            // Add new rating
+            updatedRatings = [...courseRatingsList, { ...ratingData, likes: [] }]
+          }
+
+          return {
+            ...prev,
+            [courseId]: updatedRatings,
+          }
+        })
+
+        resolve()
+      }, 500) // Simulate API delay
+    })
+  }
+
+  // Get ratings for a course
+  const getCourseRatings = (courseId) => {
+    return courseRatings[courseId] || []
+  }
+
+  // Check if user has rated a course
+  const hasUserRatedCourse = (courseId) => {
+    if (!user) return false
+
+    const ratings = courseRatings[courseId] || []
+    return ratings.some((rating) => rating.userId === user.id)
+  }
+
+  // Like a rating
+  const likeRating = (courseId, ratingIndex) => {
+    if (!user) return
+
+    setCourseRatings((prev) => {
+      const courseRatingsList = [...(prev[courseId] || [])]
+
+      if (courseRatingsList[ratingIndex]) {
+        const likes = courseRatingsList[ratingIndex].likes || []
+
+        // Toggle like
+        if (likes.includes(user.id)) {
+          courseRatingsList[ratingIndex] = {
+            ...courseRatingsList[ratingIndex],
+            likes: likes.filter((id) => id !== user.id),
+          }
+        } else {
+          courseRatingsList[ratingIndex] = {
+            ...courseRatingsList[ratingIndex],
+            likes: [...likes, user.id],
+          }
+        }
+      }
+
+      return {
+        ...prev,
+        [courseId]: courseRatingsList,
+      }
+    })
+  }
+
   // Auth context value
   const value = {
     user,
@@ -153,6 +249,11 @@ export const AuthProvider = ({ children }) => {
     updateLessonProgress,
     getCourseProgress,
     isLessonCompleted,
+    isCourseCompleted,
+    submitRating,
+    getCourseRatings,
+    hasUserRatedCourse,
+    likeRating,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
