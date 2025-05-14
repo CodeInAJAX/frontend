@@ -20,6 +20,14 @@ const Navbar = () => {
     navigate("/")
   }
 
+  const handleDashboardClick = () => {
+    if (user?.role === "guru") {
+      navigate("/mentor")
+    } else if (user?.role === "admin") {
+      navigate("/admin")
+    }
+  }
+
   return (
     <nav className="flex items-center justify-between px-4 md:px-12 py-4 bg-white shadow-sm w-full">
       {/* Logo */}
@@ -73,6 +81,14 @@ const Navbar = () => {
         {user ? (
           <div className="flex items-center space-x-4">
             <span className="text-gray-700">Hi, {user.name}</span>
+            {(user.role === "guru" || user.role === "admin") && (
+              <button
+                onClick={handleDashboardClick}
+                className="border border-orange-500 text-orange-500 px-4 py-2 rounded-full hover:bg-orange-50 transition-colors"
+              >
+                Dashboard
+              </button>
+            )}
             <button
               onClick={handleLogout}
               className="bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600 transition-colors"
@@ -116,6 +132,17 @@ const Navbar = () => {
               {user ? (
                 <>
                   <span className="text-gray-700">Hi, {user.name}</span>
+                  {(user.role === "guru" || user.role === "admin") && (
+                    <button
+                      onClick={() => {
+                        handleDashboardClick()
+                        setIsMenuOpen(false)
+                      }}
+                      className="border border-orange-500 text-orange-500 px-4 py-2 rounded-full text-center"
+                    >
+                      Dashboard
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       handleLogout()

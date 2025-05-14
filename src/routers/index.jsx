@@ -12,6 +12,7 @@ import AdminDashboard from "../pages/AdminDashboard"
 import AdminLogin from "../pages/AdminLogin"
 import Payment from "../pages/Payment"
 import ProtectedRoute from "../components/ProtectedRoute"
+import MentorDashboard from "../pages/MentorDashboard"
 
 export const router = createBrowserRouter([
   {
@@ -56,5 +57,9 @@ export const router = createBrowserRouter([
   {
     path: "/admin",
     element: <AdminDashboard />,
+  },
+  {
+    path: "/mentor",
+    element: <MentorDashboard />,
   },
 ])
