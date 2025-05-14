@@ -1,11 +1,12 @@
-import React from 'react'
+import { RouterProvider } from "react-router"
+import { router } from "./routers"
+import { AuthProvider } from "./context/authContext"
 
 const App = () => {
   return (
-    <div>
-      {/* <Navbar/> */}
-      {/* <ErrorPage /> */}
-    </div>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   )
 }
 

@@ -10,6 +10,8 @@ import Course from "../pages/Course"
 import CourseDetail from "../pages/CourseDetail"
 import AdminDashboard from "../pages/AdminDashboard"
 import AdminLogin from "../pages/AdminLogin"
+import Payment from "../pages/Payment"
+import ProtectedRoute from "../components/ProtectedRoute"
 
 export const router = createBrowserRouter([
   {
@@ -21,7 +23,22 @@ export const router = createBrowserRouter([
       { path: "/about", element: <About /> },
       { path: "/contact", element: <Contact /> },
       { path: "/courses", element: <Course /> },
-      { path: "/course/:id", element: <CourseDetail /> },
+      {
+        path: "/course/:id",
+        element: (
+          <ProtectedRoute>
+            <CourseDetail />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/payment/:id",
+        element: (
+          <ProtectedRoute>
+            <Payment />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
   {
