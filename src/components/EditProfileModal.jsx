@@ -1,55 +1,66 @@
-/* eslint-disable no-unused-vars */
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useAuth } from "../context/authContext"
-import { X } from "lucide-react"
+import { X, Upload, Camera } from "lucide-react"
 
 const EditProfileModal = ({ onClose }) => {
   const { user, updateProfile } = useAuth()
-  const [formData, setFormData] = useState({
-    name: user?.name || "",
-    photo: user?.photo || "",
-  })
-  const [errors, setErrors] = useState({})
+  const [name, setName] = useState(user?.name || "")
+  const [nameError, setNameError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [previewPhoto, setPreviewPhoto] = useState(user?.photo || "")
+  const [imagePreview, setImagePreview] = useState(user?.photo || "")
+  const [imageFile, setImageFile] = useState(null)
+  const [imageError, setImageError] = useState("")
+  const fileInputRef = useRef(null)
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData({
-      ...formData,
-      [name]: value,
-    })
-
-    // Update photo preview when URL changes
-    if (name === "photo" && value) {
-      setPreviewPhoto(value)
+  const handleNameChange = (e) => {
+    setName(e.target.value)
+    if (e.target.value.trim()) {
+      setNameError("")
     }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.match("image.*")) {
+      setImageError("Please select an image file (jpg, png, etc)")
+      return
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setImageError("Image size should be less than 2MB")
+      return
+    }
+
+    setImageError("")
+    setImageFile(file)
+
+    // Create preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setImagePreview(e.target.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const triggerFileInput = () => {
+    fileInputRef.current.click()
   }
 
   const validateForm = () => {
-    const newErrors = {}
-    if (!formData.name.trim()) {
-      newErrors.name = "Nama tidak boleh kosong"
+    let isValid = true
+
+    if (!name.trim()) {
+      setNameError("Nama tidak boleh kosong")
+      isValid = false
     }
 
-    // Validate photo URL if provided
-    if (formData.photo && !isValidUrl(formData.photo)) {
-      newErrors.photo = "URL foto tidak valid"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const isValidUrl = (url) => {
-    try {
-      new URL(url)
-      return true
-    } catch (e) {
-      return false
-    }
+    return isValid
   }
 
   const handleSubmit = (e) => {
@@ -61,18 +72,24 @@ const EditProfileModal = ({ onClose }) => {
 
     setIsSubmitting(true)
 
-    // Simulate API call
+    // In a real application, you would upload the file to a server here
+    // For this demo, we'll simulate the upload by using the base64 data
+
+    // Simulate API call with a timeout
     setTimeout(() => {
-      updateProfile(formData)
+      updateProfile({
+        name,
+        photo: imagePreview, // In a real app, this would be the URL returned from the server
+      })
       setIsSubmitting(false)
       onClose()
-    }, 500)
+    }, 800)
   }
 
   // Get initials for avatar fallback
   const getInitials = () => {
-    if (!formData.name) return "U"
-    return formData.name
+    if (!name) return "U"
+    return name
       .split(" ")
       .map((n) => n[0])
       .join("")
@@ -91,65 +108,60 @@ const EditProfileModal = ({ onClose }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-4">
-          {/* Profile Photo Preview */}
+          {/* Profile Photo Upload */}
           <div className="flex flex-col items-center mb-6">
-            <div className="mb-3">
-              {previewPhoto ? (
+            <div className="mb-3 relative">
+              {imagePreview ? (
                 <img
-                  src={previewPhoto || "/placeholder.svg"}
+                  src={imagePreview || "/placeholder.svg"}
                   alt="Profile Preview"
                   className="w-24 h-24 rounded-full object-cover border-2 border-orange-500"
-                  onError={() => setPreviewPhoto("")}
                 />
               ) : (
                 <div className="w-24 h-24 rounded-full bg-orange-500 flex items-center justify-center text-white text-2xl font-medium">
                   {getInitials()}
                 </div>
               )}
+
+              <button
+                type="button"
+                onClick={triggerFileInput}
+                className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md border border-gray-200"
+              >
+                <Camera size={18} className="text-gray-700" />
+              </button>
             </div>
-            <p className="text-sm text-gray-500 mb-2">Profile Photo</p>
+
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+
+            <button
+              type="button"
+              onClick={triggerFileInput}
+              className="text-sm text-orange-500 font-medium flex items-center mt-1"
+            >
+              <Upload size={14} className="mr-1" />
+              Upload Photo
+            </button>
+
+            {imageError && <p className="mt-1 text-xs text-red-500">{imageError}</p>}
+            <p className="text-xs text-gray-500 mt-1">Max file size: 2MB (JPG, PNG)</p>
           </div>
 
           {/* Name Input */}
-          <div className="mb-4">
+          <div className="mb-6">
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
               Nama
             </label>
             <input
               type="text"
               id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
+              value={name}
+              onChange={handleNameChange}
               className={`w-full px-3 py-2 border ${
-                errors.name ? "border-red-500" : "border-gray-300"
+                nameError ? "border-red-500" : "border-gray-300"
               } rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500`}
             />
-            {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
-          </div>
-
-          {/* Photo URL Input */}
-          <div className="mb-6">
-            <label htmlFor="photo" className="block text-sm font-medium text-gray-700 mb-1">
-              URL Foto Profil
-            </label>
-            <div className="flex">
-              <input
-                type="text"
-                id="photo"
-                name="photo"
-                value={formData.photo}
-                onChange={handleChange}
-                placeholder="https://example.com/photo.jpg"
-                className={`w-full px-3 py-2 border ${
-                  errors.photo ? "border-red-500" : "border-gray-300"
-                } rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500`}
-              />
-            </div>
-            {errors.photo && <p className="mt-1 text-sm text-red-500">{errors.photo}</p>}
-            <p className="mt-1 text-xs text-gray-500">
-              Masukkan URL gambar dari internet (contoh: https://example.com/photo.jpg)
-            </p>
+            {nameError && <p className="mt-1 text-sm text-red-500">{nameError}</p>}
           </div>
 
           <div className="flex justify-end gap-2">

@@ -89,6 +89,8 @@ export const AuthProvider = ({ children }) => {
 
   // Update profile function
   const updateProfile = (updates) => {
+    // In a real application, this would handle file uploads to a server
+    // and update the user profile with the returned URL
     setUser((prev) => ({ ...prev, ...updates }))
   }
 
