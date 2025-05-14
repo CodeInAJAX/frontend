@@ -18,7 +18,7 @@ const Contact = () => {
             kontak yang tersedia.
           </p>
           <a
-            href="/"
+            href="https://wa.me/6281779190013?text=Halo%20saya%20tertarik%20dengan%20jasa%20UI%2FUX%20design%20Anda" target="_blank" rel="noopener noreferrer"
             className="inline-block py-2 px-4 md:py-3 md:px-6 bg-primary text-white font-medium rounded-lg hover:bg-orange-600 transition text-base"
           >
             Kontak Sekarang
