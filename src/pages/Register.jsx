@@ -1,6 +1,7 @@
 import bgGrid from "../assets/bgGrid.png";
 import logo from "../assets/codeinajaLogo.svg";
 import usePageTitle from "../hooks/usePageTitle";
+import { Link } from "react-router"
 import useRole from "../hooks/useRole";
 const Register = () => {
   usePageTitle("Register");
@@ -76,8 +77,8 @@ const Register = () => {
         </form>
         <p className="text-center text-sm text-gray-600 mt-4">
           Sudah punya akun?{" "}
-          <Link to="/register" className="text-orange-500 font-medium">
-            Registrasi
+          <Link to="/login" className="text-orange-500 font-medium">
+            Masuk
           </Link>
         </p>
       </div>
