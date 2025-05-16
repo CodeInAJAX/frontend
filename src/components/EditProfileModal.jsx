@@ -8,6 +8,8 @@ const EditProfileModal = ({ onClose }) => {
   const { user, updateProfile } = useAuth()
   const [name, setName] = useState(user?.name || "")
   const [nameError, setNameError] = useState("")
+  const [gender, setGender] = useState(user?.gender || "Pria")
+  const [bio, setBio] = useState(user?.bio || "")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [imagePreview, setImagePreview] = useState(user?.photo || "")
   const [imageFile, setImageFile] = useState(null)
@@ -25,13 +27,11 @@ const EditProfileModal = ({ onClose }) => {
     const file = e.target.files[0]
     if (!file) return
 
-    // Validate file type
     if (!file.type.match("image.*")) {
       setImageError("Please select an image file (jpg, png, etc)")
       return
     }
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       setImageError("Image size should be less than 2MB")
       return
@@ -40,7 +40,6 @@ const EditProfileModal = ({ onClose }) => {
     setImageError("")
     setImageFile(file)
 
-    // Create preview
     const reader = new FileReader()
     reader.onload = (e) => {
       setImagePreview(e.target.result)
@@ -54,39 +53,31 @@ const EditProfileModal = ({ onClose }) => {
 
   const validateForm = () => {
     let isValid = true
-
     if (!name.trim()) {
       setNameError("Nama tidak boleh kosong")
       isValid = false
     }
-
     return isValid
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-
-    if (!validateForm()) {
-      return
-    }
+    if (!validateForm()) return
 
     setIsSubmitting(true)
 
-    // In a real application, you would upload the file to a server here
-    // For this demo, we'll simulate the upload by using the base64 data
-
-    // Simulate API call with a timeout
     setTimeout(() => {
       updateProfile({
         name,
-        photo: imagePreview, // In a real app, this would be the URL returned from the server
+        photo: imagePreview,
+        gender,
+        bio
       })
       setIsSubmitting(false)
       onClose()
     }, 800)
   }
 
-  // Get initials for avatar fallback
   const getInitials = () => {
     if (!name) return "U"
     return name
@@ -108,7 +99,6 @@ const EditProfileModal = ({ onClose }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-4">
-          {/* Profile Photo Upload */}
           <div className="flex flex-col items-center mb-6">
             <div className="mb-3 relative">
               {imagePreview ? (
@@ -147,7 +137,7 @@ const EditProfileModal = ({ onClose }) => {
             <p className="text-xs text-gray-500 mt-1">Max file size: 2MB (JPG, PNG)</p>
           </div>
 
-          {/* Name Input */}
+          {/* Name */}
           <div className="mb-6">
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
               Nama
@@ -162,6 +152,38 @@ const EditProfileModal = ({ onClose }) => {
               } rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500`}
             />
             {nameError && <p className="mt-1 text-sm text-red-500">{nameError}</p>}
+          </div>
+
+          {/* Gender */}
+          <div className="mb-6">
+            <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
+              Gender
+            </label>
+            <select
+              id="gender"
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="Pria">Pria</option>
+              <option value="Wanita">Wanita</option>
+              <option value="Lainnya">LGBTq</option>
+            </select>
+          </div>
+
+          {/* Bio */}
+          <div className="mb-6">
+            <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
+              Bio
+            </label>
+            <textarea
+              id="bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              rows={3}
+              placeholder="Ceritain dikit tentang kamu..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+            />
           </div>
 
           <div className="flex justify-end gap-2">

@@ -477,19 +477,6 @@ const MentorDashboard = () => {
                   ></textarea>
                 </div>
 
-                <div>
-                  <label htmlFor="expertise" className="block text-sm font-medium text-gray-700 mb-1">
-                    Bidang Keahlian
-                  </label>
-                  <input
-                    type="text"
-                    id="expertise"
-                    name="expertise"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    placeholder="Contoh: Web Development, Mobile App, Data Science"
-                  />
-                </div>
-
                 <div className="pt-4">
                   <button
                     type="submit"
