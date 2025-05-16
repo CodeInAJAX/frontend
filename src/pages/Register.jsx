@@ -76,9 +76,9 @@ const Register = () => {
         </form>
         <p className="text-center text-sm text-gray-600 mt-4">
           Sudah punya akun?{" "}
-          <a href="/login" className="text-orange-500 font-medium">
-            Masuk
-          </a>
+          <Link to="/register" className="text-orange-500 font-medium">
+            Registrasi
+          </Link>
         </p>
       </div>
     </div>
