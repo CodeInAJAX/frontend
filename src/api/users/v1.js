@@ -13,7 +13,7 @@ const profileAPI = async () => {
 };
 
 const updateAPI = async (user) => {
-    return await callAPI({method: "put", path: "/users", data: user});
+    return await callAPI({method: "patch", path: "/users", data: user});
 }
 
 const logoutAPI = async () => {
