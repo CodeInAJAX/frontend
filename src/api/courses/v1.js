@@ -1,4 +1,4 @@
-import { callAPIWithMeta} from "../../utils/helpers.js";
+import {callAPI, callAPIWithMeta} from "../../utils/helpers.js";
 
 
 const getCoursesAPI  = async (pageTo = 1 ,size = 20) => {
@@ -6,7 +6,12 @@ const getCoursesAPI  = async (pageTo = 1 ,size = 20) => {
     return await callAPIWithMeta({method: "get", path, data: null});
 }
 
+const createCourseAPI = async (course) => {
+    return await callAPI({method: "post", path: `/courses`, data: course})
+}
+
 
 export {
-    getCoursesAPI
+    getCoursesAPI,
+    createCourseAPI,
 }
