@@ -82,6 +82,8 @@ export const AuthProvider = ({ children }) => {
     return { success: false, message: "Email atau password salah" }
   }
 
+
+
   // Logout function
   const logout = () => {
     setUser(null)
