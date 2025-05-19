@@ -30,15 +30,7 @@ const Navbar = () => {
   }
 
   // Get initials for avatar fallback
-  const getInitials = () => {
-    if (!user?.name) return "U"
-    return user.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2)
-  }
+  //
 
   return (
     <nav className="flex items-center justify-between px-4 md:px-12 py-4 bg-white shadow-sm w-full">
@@ -138,22 +130,24 @@ const Navbar = () => {
               {user ? (
                 <>
                   <div className="flex items-center space-x-2 py-2">
-                    {user?.photo ? (
+                    {user?.profile?.photo ? (
                       <img
-                        src={user.photo || "/placeholder.svg"}
+                        src={new URL(user.profile.photo).pathname}
                         alt={user.name}
                         className="w-8 h-8 rounded-full object-cover border-2 border-white"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-medium">
-                        {getInitials()}
-                      </div>
+                        <img
+                            src={window.location.origin + "/assets/profile.jpg"}
+                            alt={user.name}
+                            className="w-8 h-8 rounded-full object-cover border-2 border-white"
+                        />
                     )}
                     <span className="text-gray-700">{user.name}</span>
                   </div>
                   {(user.role === "guru" || user.role === "admin") && (
-                    <button
-                      onClick={() => {
+                      <button
+                          onClick={() => {
                         handleDashboardClick()
                         setIsMenuOpen(false)
                       }}
