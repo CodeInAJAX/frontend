@@ -22,8 +22,8 @@ const EditProfileModal = ({ onClose }) => {
   // State for loading and status message
   const {isSubmitting, setIsSubmitting} = useSubmitting()
   const {statusMessage, setStatusMessage} = useStatusMessage()
-
-  const [imagePreview, setImagePreview] = useState(user?.photo || "")
+  const photo = new URL(user?.profile?.photo).protocol === "http:" ? new URL(user?.profile?.photo).pathname : user?.profile?.photo
+  const [imagePreview, setImagePreview] = useState(photo || "")
   const [imageFile, setImageFile] = useState(null)
   const [imageError, setImageError] = useState("")
   const fileInputRef = useRef(null)
@@ -92,8 +92,7 @@ const EditProfileModal = ({ onClose }) => {
       // Validate form data
       handleValidation(editUserSchema)
 
-      // Create a copy of the form data for submission
-      const dataToSubmit = { ...formData }
+
 
       // Handle photo upload if there's a new photo
       if (formData.photo) {
@@ -109,7 +108,12 @@ const EditProfileModal = ({ onClose }) => {
           setIsSubmitting(false);
           return;
         }
+      } else {
+        delete formData.photo;
       }
+
+      // Create a copy of the form data for submission
+      const dataToSubmit = { ...formData }
 
       // Update profile
       const result = await updateProfile(dataToSubmit)
@@ -252,7 +256,6 @@ const EditProfileModal = ({ onClose }) => {
                   value={formData.gender}
                   onChange={(e) => {
                     handleGenderChange(e.target.value);
-                    console.log({name: e.target.name, value: e.target.value});
                     handleChange(e);
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
