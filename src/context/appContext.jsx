@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import {loginAPI, logoutAPI, profileAPI, updateAPI} from "../api/users/v1.js";
 import useErrors from "../hooks/useErrors.jsx";
+import {getCoursesAPI} from "../api/courses/v1.js";
 // Create the auth context
 const AppContext = createContext()
 
@@ -16,6 +17,10 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const { errors, setErrors } = useErrors()
+  
+  const [courses, setCourses] = useState([])
+  
+  
   const [purchasedCourses, setPurchasedCourses] = useState([])
   const [courseProgress, setCourseProgress] = useState({})
   const [courseRatings, setCourseRatings] = useState({})
@@ -132,6 +137,16 @@ export const AppProvider = ({ children }) => {
       return true
     }
     return false
+  }
+  
+  const getCourses = async (pageTo) => {
+    try {
+      const data = await getCoursesAPI(pageTo, 20)
+      setCourses(data)
+      return { success: true, message: "Berhasil mendapatkan kursus..." }
+    } catch (error) {
+      return { success: false, message: error.message ?? "Gagal mendapatkan kursus, tolong coba lagi..." }
+    }
   }
 
   // Check if a course is purchased
@@ -270,6 +285,9 @@ export const AppProvider = ({ children }) => {
     login,
     errors,
     logout,
+    courses,
+    setCourses,
+    getCourses,
     updateProfile,
     purchaseCourse,
     isCoursePurchased,
