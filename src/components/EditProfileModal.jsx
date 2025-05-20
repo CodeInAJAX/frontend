@@ -55,13 +55,13 @@ const EditProfileModal = ({ onClose }) => {
 
     // Validate file type
     if (!file.type.match("image.*")) {
-      setImageError("Please select an image file (jpg, png, etc)")
+      setImageError("Tolong pilih file foto yang benar (jpg, png, dll)")
       return
     }
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      setImageError("Image size should be less than 2MB")
+      setImageError("Ukuran foto harus lebih kecil dari 2MB")
       return
     }
 
