@@ -148,7 +148,7 @@ const EditProfileModal = ({ onClose }) => {
             </button>
           </div>
 
-          {/* Status Message */}
+          {/* Status Message -> */}
           {statusMessage.message && (
               <div
                   className={`mx-4 mt-4 p-3 rounded-lg text-sm ${
