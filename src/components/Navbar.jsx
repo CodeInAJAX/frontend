@@ -22,7 +22,7 @@ const Navbar = () => {
   }
 
   const handleDashboardClick = () => {
-    if (user?.role === "guru") {
+    if (user?.role === "mentor") {
       navigate("/mentor")
     } else if (user?.role === "admin") {
       navigate("/admin")
@@ -84,7 +84,7 @@ const Navbar = () => {
       <div className="hidden md:flex items-center space-x-4">
         {user ? (
           <div className="flex items-center space-x-4">
-            {(user.role === "guru" || user.role === "admin") && (
+            {(user.role === "mentor" || user.role === "admin") && (
               <button
                 onClick={handleDashboardClick}
                 className="border border-orange-500 text-orange-500 px-4 py-2 rounded-full hover:bg-orange-50 transition-colors"
