@@ -263,19 +263,26 @@ const MentorDashboard = () => {
     // Then refresh the course list
   }
 
-  // Handle new course form
+// Handle new course form
   const handleNewCourseChange = (e) => {
     const { name, value, type, checked } = e.target
 
-    setCourseFormData(prev => ({
-      ...prev,
-      [name]: name === "isPaid" ? checked
-          : name === "price" ? parseInt(value, 10) || 0
-              : value
-    }))
+    setCourseFormData(prev => {
+      const isPaid = name === "isPaid" ? checked : prev.isPaid
+      const price = name === "price" ? parseInt(value, 10) || 0 : prev.price
+
+      return {
+        ...prev,
+        [name]: name === "price" ? (isPaid ? price : 0)
+                : value,
+        // Ensure price is 0 if isPaid is false
+        price: isPaid ? (name === "price" ? parseInt(value, 10) || 0 : prev.price) : 0,
+      }
+    })
 
     handleWhenCourseInput(e)
   }
+
 
 
 
@@ -459,7 +466,7 @@ const MentorDashboard = () => {
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Kursus Populer</h3>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Kursus Anda</h3>
                       <div className="space-y-4">
                         {mentorCourses.length > 0 ? (
                             mentorCourses.map((course, index) => (
@@ -467,18 +474,24 @@ const MentorDashboard = () => {
                                     key={index}
                                     className="flex items-center gap-3 pb-3 border-b border-gray-100 last:border-0 last:pb-0"
                                 >
-                                  <img
-                                      src={course.thumbnail || "/api/placeholder/48/48"}
-                                      alt={course.title}
-                                      className="w-12 h-12 rounded object-cover"
-                                  />
+                                  {new URL(course?.thumbnail).protocol == "http:"
+                                      ? <img
+                                          src={new URL(course?.thumbnail).pathname}
+                                          alt={course.title}
+                                          className="w-12 h-12 rounded object-cover"
+                                      />
+                                      : <img
+                                          src={course.thumbnail || "/api/placeholder/40/40"}
+                                          alt={course.title}
+                                          className="w-12 h-12 rounded object-cover"
+                                      />}
                                   <div className="flex-1">
                                     <h4 className="text-sm font-medium text-gray-800">{course.title}</h4>
                                     <p className="text-xs text-gray-500">{user?.name}</p>
                                   </div>
                                   <div className="text-right">
                                     <p className="text-sm font-medium text-gray-800">
-                                      {course.isPaid ? `${course?.currency} ${course?.price}` : "Gratis"}
+                                      {course.price !== 0 ? `${course?.currency} ${course?.price.toLocaleString(course?.currency)}` : "Gratis"}
                                     </p>
                                     <p className="text-xs text-gray-500">Harga</p>
                                   </div>
@@ -582,11 +595,18 @@ const MentorDashboard = () => {
                                 <tr key={course.id} className="hover:bg-gray-50">
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
-                                      <img
-                                          src={course.thumbnail || "/api/placeholder/40/40"}
-                                          alt={course.title}
-                                          className="w-10 h-10 rounded object-cover mr-3"
-                                      />
+                                      {new URL(course?.thumbnail).protocol == "http:"
+                                          ? <img
+                                              src={new URL(course?.thumbnail).pathname}
+                                              alt={course.title}
+                                              className="w-10 h-10 rounded object-cover mr-3"
+                                          />
+                                          : <img
+                                              src={course.thumbnail || "/api/placeholder/40/40"}
+                                              alt={course.title}
+                                              className="w-10 h-10 rounded object-cover mr-3"
+                                          />}
+
                                       <div>
                                         <div className="text-sm font-medium text-gray-900">{course.title}</div>
                                         <div className="text-xs text-gray-500">ID: {course.id}</div>
@@ -594,7 +614,8 @@ const MentorDashboard = () => {
                                     </div>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              <span
+                                  className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                 Aktif
                               </span>
                                   </td>
