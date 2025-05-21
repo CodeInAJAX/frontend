@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react"
 import {loginAPI, logoutAPI, profileAPI, updateAPI} from "../api/users/v1.js";
+import useErrors from "../hooks/useErrors.jsx";
 // Create the auth context
 const AppContext = createContext()
 
@@ -14,7 +15,7 @@ const SAMPLE_USERS = [
 export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [errors, setErrors] = useState([]);
+  const { errors, setErrors } = useErrors()
   const [purchasedCourses, setPurchasedCourses] = useState([])
   const [courseProgress, setCourseProgress] = useState({})
   const [courseRatings, setCourseRatings] = useState({})
@@ -33,15 +34,14 @@ export const AppProvider = ({ children }) => {
         setUser(user || null)
       } catch (error) {
         setUser(null)
-        setErrors(prev => [
-          ...prev,
-          { users: { message: error.message } },
-        ])
+        setErrors({
+          type: "users.profile",
+          message: error.message,
+        })
       } finally {
         setLoading(false)
       }
     }
-
     // Load local storage
     const storedPurchasedCourses = localStorage.getItem("purchasedCourses")
     const storedProgress = localStorage.getItem("courseProgress")
@@ -53,37 +53,6 @@ export const AppProvider = ({ children }) => {
 
     fetchUser()
   }, [])
-
-  // Save user to API whenever it changes
-  useEffect(() => {
-    const updateUser = async () => {
-      try {
-        if (user) {
-          const userCopy = { ...user };
-          delete userCopy.email;
-
-          const updated = await updateAPI(userCopy);
-          setUser({
-            ...userCopy,
-            ...updated,
-          });
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        setErrors(prev => [
-          ...prev,
-          {
-            users: {
-              message: error.message,
-            },
-          },
-        ]);
-      }
-    };
-
-    updateUser();
-  }, []);
 
   // Save purchased courses to localStorage
   useEffect(() => {
@@ -136,10 +105,17 @@ export const AppProvider = ({ children }) => {
   }
 
   // Update profile function
-  const updateProfile = (updates) => {
-    // In a real application, this would handle file uploads to a server
-    // and update the user profile with the returned URL
-    setUser((prev) => ({ ...prev, ...updates }))
+  const updateProfile = async (updates) => {
+    try {
+      await updateAPI(updates);
+      const user = await profileAPI();
+      if (user) {
+        setUser(user)
+      }
+      return { success: true, message: "Berhasil melakukan edit profile..." }
+    } catch (error) {
+      return { success: false, message: error.message ?? "Gagal melakukan edit profile, tolong coba lagi..." }
+    }
   }
 
   // Purchase course function
