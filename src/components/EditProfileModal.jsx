@@ -171,11 +171,15 @@ const EditProfileModal = ({ onClose }) => {
                     />
                 ) : (
                     user?.profile?.photo ? (
-                        <img
-                            src={new URL(user.profile.photo).pathname}
-                            alt="Profile Preview"
-                            className="w-24 h-24 rounded-full object-cover border-2 border-orange-500"
-                        />
+                      (new URL(user?.profile?.photo).protocol == "http:") ? <img
+                      src={new URL(user.profile.photo).pathname}
+                      alt={user.name}
+                      className="w-8 h-8 rounded-full object-cover border-2 border-white"
+                  /> : <img
+                  src={user.profile.photo}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full object-cover border-2 border-white"
+              />
                     ) : (
                         <img
                             src={window.location.origin + "/assets/profile.jpg"}

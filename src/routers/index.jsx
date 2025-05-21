@@ -69,6 +69,10 @@ export const router = createBrowserRouter([
   },
   {
     path: "/mentor",
-    element: <MentorDashboard />,
+    element: (
+      <ProtectedRoute>
+        <MentorDashboard></MentorDashboard>
+    </ProtectedRoute>
+    ),
   },
 ])

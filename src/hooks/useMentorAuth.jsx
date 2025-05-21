@@ -2,11 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router"
-import { useApp } from "../context/appContext.jsx"
 
-const useMentorAuth = () => {
+const useMentorAuth = (user) => {
   const navigate = useNavigate()
-  const { user } = useApp()
   const [isLoading, setIsLoading] = useState(true)
 
   // Check auth status after component mounts to ensure localStorage is available
@@ -18,7 +16,7 @@ const useMentorAuth = () => {
 
     return () => clearTimeout(timer);
   }, [user]);
-  const isMentorLoggedIn = user && user.role === "mentor"
+  const isMentorLoggedIn = user && user.role == "mentor"
 
   const redirectIfNotMentor = () => {
     if (!isLoading && !isMentorLoggedIn) {

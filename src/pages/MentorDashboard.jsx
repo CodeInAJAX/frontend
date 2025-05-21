@@ -38,7 +38,8 @@ const MentorDashboard = () => {
 
   const navigate = useNavigate()
   const { user, logout, updateProfile } = useApp()
-  useMentorRedirect()
+
+  useMentorRedirect(user)
 
 
   const handleLogout = () => {
@@ -70,7 +71,6 @@ const MentorDashboard = () => {
   const { isSubmitting, setIsSubmitting } = useSubmitting()
 
   // Image State
-  console.log(user)
   const photo = new URL(user?.profile?.photo).protocol === "http:" ? new URL(user?.profile?.photo).pathname : user?.profile?.photo
   const [imagePreview, setImagePreview] = useState(photo || "")
   const [imageFile, setImageFile] = useState(null)
@@ -599,11 +599,15 @@ const MentorDashboard = () => {
                         />
                     ) : (
                         user?.profile?.photo ? (
-                            <img
-                                src={new URL(user.profile.photo).pathname}
-                                alt="Profile Preview"
-                                className="w-24 h-24 rounded-full object-cover border-2 border-orange-500"
-                            />
+                          (new URL(user?.profile?.photo).protocol == "http:") ? <img
+                          src={new URL(user.profile.photo).pathname}
+                          alt={user.name}
+                          className="w-8 h-8 rounded-full object-cover border-2 border-white"
+                      /> : <img
+                      src={user.profile.photo}
+                      alt={user.name}
+                      className="w-8 h-8 rounded-full object-cover border-2 border-white"
+                  />
                         ) : (
                             <img
                                 src={window.location.origin + "/assets/profile.jpg"}

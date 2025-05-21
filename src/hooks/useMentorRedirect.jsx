@@ -4,9 +4,9 @@ import { useEffect } from "react"
 import { useNavigate } from "react-router"
 import useMentorAuth from "./useMentorAuth"
 
-const useMentorRedirect = () => {
+const useMentorRedirect = (user) => {
   const navigate = useNavigate()
-  const { isMentorLoggedIn, isLoading } = useMentorAuth()
+  const { isMentorLoggedIn, isLoading } = useMentorAuth(user)
 
   useEffect(() => {
     // Only redirect if we're done loading and user is not a mentor
