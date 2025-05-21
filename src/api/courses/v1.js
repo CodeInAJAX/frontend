@@ -10,8 +10,13 @@ const createCourseAPI = async (course) => {
     return await callAPI({method: "post", path: `/courses`, data: course})
 }
 
+const deleteCourseAPI = async (course) => {
+    return await callAPI({method: "delete", path: `/courses/${course.id}`})
+}
+
 
 export {
     getCoursesAPI,
     createCourseAPI,
+    deleteCourseAPI
 }
