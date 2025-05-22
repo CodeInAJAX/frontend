@@ -145,7 +145,7 @@ const Navbar = () => {
                     )}
                     <span className="text-gray-700">{user.name}</span>
                   </div>
-                  {(user.role === "guru" || user.role === "admin") && (
+                  {(user.role === "mentor" || user.role === "admin") && (
                       <button
                           onClick={() => {
                         handleDashboardClick()
