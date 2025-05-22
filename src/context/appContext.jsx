@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import {loginAPI, logoutAPI, profileAPI, updateAPI} from "../api/users/v1.js";
 import useErrors from "../hooks/useErrors.jsx";
-import {getCoursesAPI} from "../api/courses/v1.js";
+import {createCourseAPI, getCoursesAPI} from "../api/courses/v1.js";
 // Create the auth context
 const AppContext = createContext()
 
@@ -19,6 +19,7 @@ export const AppProvider = ({ children }) => {
   const { errors, setErrors } = useErrors()
   
   const [courses, setCourses] = useState([])
+  const [mentorCourses, setMentorCourses] = useState([])
   
   
   const [purchasedCourses, setPurchasedCourses] = useState([])
@@ -37,6 +38,7 @@ export const AppProvider = ({ children }) => {
       try {
         const user = await profileAPI()
         setUser(user || null)
+        setMentorCourses(user?.courses || [])
       } catch (error) {
         setUser(null)
         setErrors({
@@ -182,6 +184,15 @@ export const AppProvider = ({ children }) => {
     })
   }
 
+  const createCourses = async (course) => {
+    try {
+      await createCourseAPI(course)
+      return { success: true, message: "Berhasil membuat kursus..." }
+    } catch (error) {
+      return { success: false, message: error.message ?? "Gagal melakukan membuat kursus, tolong coba lagi..." }
+    }
+  }
+
   // Get course progress
   const getCourseProgress = (courseId) => {
     return courseProgress[courseId] || { completed: [], progress: 0 }
@@ -299,6 +310,9 @@ export const AppProvider = ({ children }) => {
     getCourseRatings,
     hasUserRatedCourse,
     likeRating,
+    createCourses,
+    mentorCourses,
+    setMentorCourses
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
