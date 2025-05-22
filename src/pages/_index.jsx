@@ -10,13 +10,8 @@ import {useApp} from "../context/appContext.jsx";
 import {useNavigate} from "react-router";
 
 const Homepage = () => {
-  const navigate = useNavigate()
-  const { user } = useApp()
   usePageTitle("Beranda");
 
-  if (user?.role == "mentor") {
-    navigate("/mentor");
-  }
 
   return (
     <main className="bg-white text-black overflow-x-hidden">
