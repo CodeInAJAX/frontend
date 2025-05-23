@@ -16,7 +16,7 @@ const Login = () => {
   usePageTitle("Login")
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, user } = useApp()
+  const { login } = useApp()
 
   // State for errors message
   const { errors, setErrors, handleWhenInputForm, handleZodErrors } = useErrors();
@@ -50,24 +50,22 @@ const Login = () => {
       handleValidation(loginSchema)
 
       const result = await login(formData)
-
       if (result.success) {
-
-        // Redirect to the page they were trying to access or homepage
         setStatusMessage({
           type: "success",
           message: "Berhasil melakukan login, halaman akan beralih ke beranda...",
         })
-
-
         setTimeout(() => {
-          user?.role == "mentor" ? navigate("/mentor") :  navigate(from);
+          navigate(from)
         }, 1000)
       } else {
         setStatusMessage({
           type: "error",
           message: result.message
         })
+        setTimeout(() => {
+          setStatusMessage({ type: "", message: "" })
+        }, 3000)
       }
     } catch (zodError) {
       handleZodErrors(zodError)
