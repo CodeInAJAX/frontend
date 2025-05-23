@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import {loginAPI, logoutAPI, profileAPI, updateAPI} from "../api/users/v1.js";
 import useErrors from "../hooks/useErrors.jsx";
-import {createCourseAPI, getCoursesAPI} from "../api/courses/v1.js";
+import {createCourseAPI, deleteCourseAPI, getCoursesAPI} from "../api/courses/v1.js";
 // Create the auth context
 const AppContext = createContext()
 
@@ -193,6 +193,15 @@ export const AppProvider = ({ children }) => {
     }
   }
 
+  const deleteCourses = async (course) => {
+    try {
+      await deleteCourseAPI(course);
+      return { success: true, message: "Berhasil menghapus kursus..." }
+    } catch (error) {
+      return { success: false, message: error?.message ?? "Gagal menghapus kursus, tolong coba lagi..." }
+    }
+  }
+
   // Get course progress
   const getCourseProgress = (courseId) => {
     return courseProgress[courseId] || { completed: [], progress: 0 }
@@ -311,6 +320,7 @@ export const AppProvider = ({ children }) => {
     hasUserRatedCourse,
     likeRating,
     createCourses,
+    deleteCourses,
     mentorCourses,
     setMentorCourses
   }
