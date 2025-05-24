@@ -16,7 +16,7 @@ const Login = () => {
   usePageTitle("Login")
   const navigate = useNavigate()
   const location = useLocation()
-  const { login } = useApp()
+  const { login, user } = useApp()
 
   // State for errors message
   const { errors, setErrors, handleWhenInputForm, handleZodErrors } = useErrors();
@@ -58,9 +58,11 @@ const Login = () => {
           type: "success",
           message: "Berhasil melakukan login, halaman akan beralih ke beranda...",
         })
+
+
         setTimeout(() => {
-          navigate(from);
-        }, 200)
+          user?.role == "mentor" ? navigate("/mentor") :  navigate(from);
+        }, 1000)
       } else {
         setStatusMessage({
           type: "error",
