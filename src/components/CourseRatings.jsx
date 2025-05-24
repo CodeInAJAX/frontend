@@ -2,11 +2,11 @@
 
 import { useState } from "react"
 import StarRating from "./StarRating"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
 import { MessageSquare, ThumbsUp, Flag } from "lucide-react"
 
 const CourseRatings = ({ courseId }) => {
-  const { getCourseRatings, user, likeRating } = useAuth()
+  const { getCourseRatings, user, likeRating } = useApp()
   const [sortBy, setSortBy] = useState("newest") // newest, highest, lowest
 
   // Get ratings for this course
