@@ -6,6 +6,10 @@ const getCoursesAPI  = async (pageTo = 1 ,size = 20) => {
     return await callAPIWithMeta({method: "get", path, data: null});
 }
 
+const getCourseAPI = async (courseId) => {
+    return await callAPI({method: "get", path: `/courses/${courseId}`});
+}
+
 const createCourseAPI = async (course) => {
     return await callAPI({method: "post", path: `/courses`, data: course})
 }
@@ -24,4 +28,5 @@ export {
     createCourseAPI,
     deleteCourseAPI,
     updateCourseAPI,
+    getCourseAPI,
 }
