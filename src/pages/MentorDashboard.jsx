@@ -38,7 +38,7 @@ const MentorDashboard = () => {
   usePageTitle("Mentor Dashboard")
 
   const navigate = useNavigate()
-  const { user, logout, updateProfile, createCourses, mentorCourses } = useApp()
+  const { user, logout, updateProfile, createCourses, mentorCourses,deleteCourses } = useApp()
 
   useMentorRedirect(user)
 
@@ -54,6 +54,7 @@ const MentorDashboard = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [showNewCourseModal, setShowNewCourseModal] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // State Form Course
   const {
@@ -256,11 +257,81 @@ const MentorDashboard = () => {
     setShowDeleteModal(true)
   }
 
+  // Handle edit course
+  // Handle edit click
+  const handleEditClick = (course) => {
+    setCourseFormData({
+      id: course.id,
+      title: course.title,
+      description: course.description || '',
+      price: course.price,
+      currency: course.currency || 'IDR',
+      thumbnail: course.thumbnail
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit =  async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Update the course in the list
+      const updatedCourses = mentorCourses.map(course =>
+          course.id === courseFormData.id
+              ? { ...course, ...courseFormData }
+              : course
+      );
+
+      setMentorCourses(updatedCourses);
+      setFilteredCourses(updatedCourses);
+
+      // Close modal and reset form
+      setIsEditModalOpen(false);
+      setCourseFormData({
+        id: '',
+        title: '',
+        description: '',
+        price: 0,
+        currency: 'IDR',
+        category: '',
+        thumbnail: ''
+      });
+
+      // Show success message (you can replace this with your notification system)
+      alert('Kursus berhasil diperbarui!');
+
+    } catch (error) {
+      console.error('Error updating course:', error);
+      alert('Gagal memperbarui kursus. Silakan coba lagi.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Close modal
+  const closeModal = () => {
+    setIsEditModalOpen(false);
+    setCourseFormData({
+      id: '',
+      title: '',
+      description: '',
+      price: 0,
+      currency: 'IDR',
+      category: '',
+      thumbnail: ''
+    });
+  };
+
   const confirmDelete = () => {
     // In a real app, you would call an API to delete the course
-    console.log(`Deleting course: ${selectedCourse.id}`)
+    deleteCourses(selectedCourse)
     setShowDeleteModal(false)
     // Then refresh the course list
+    window.location.reload()
   }
 
 // Handle new course form
@@ -352,6 +423,7 @@ const MentorDashboard = () => {
       handleZodErrorsCourse(error)
     } finally {
       setIsCourseSubmit(false)
+      window.location.reload()
     }
   }
 
@@ -428,9 +500,23 @@ const MentorDashboard = () => {
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white font-medium">
-                  {user?.name?.charAt(0) || "M"}
-                </div>
+                {user?.profile?.photo ? (
+                    <img
+                        src={
+                          new URL(user.profile.photo).protocol === "http:"
+                              ? new URL(user.profile.photo).pathname
+                              : user.profile.photo
+                        }
+                        alt={user.name}
+                        className="w-8 h-8 rounded-full object-cover border-2 border-white"
+                    />
+                ) : (
+                    <img
+                        src="/api/placeholder/32/32"
+                        alt="Profile Preview"
+                        className="w-8 h-8 rounded-full object-cover border-2 border-orange-500"
+                    />
+                )}
                 <span className="text-sm font-medium text-gray-700">{user?.name || "Mentor"}</span>
               </div>
             </div>
@@ -467,40 +553,59 @@ const MentorDashboard = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
                       <h3 className="text-lg font-semibold text-gray-800 mb-4">Kursus Anda</h3>
-                      <div className="space-y-4">
-                        {mentorCourses.length > 0 ? (
-                            mentorCourses.map((course, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-center gap-3 pb-3 border-b border-gray-100 last:border-0 last:pb-0"
-                                >
-                                  {new URL(course?.thumbnail).protocol == "http:"
-                                      ? <img
-                                          src={new URL(course?.thumbnail).pathname}
-                                          alt={course.title}
-                                          className="w-12 h-12 rounded object-cover"
-                                      />
-                                      : <img
-                                          src={course.thumbnail || "/api/placeholder/40/40"}
-                                          alt={course.title}
-                                          className="w-12 h-12 rounded object-cover"
-                                      />}
-                                  <div className="flex-1">
-                                    <h4 className="text-sm font-medium text-gray-800">{course.title}</h4>
-                                    <p className="text-xs text-gray-500">{user?.name}</p>
+                      <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Kursus Anda</h3>
+                        <div className="space-y-4">
+                          {mentorCourses.length > 0 ? (
+                              mentorCourses.slice(0, 3).map((course, index) => (
+                                  <div
+                                      key={index}
+                                      className="flex items-center gap-3 pb-3 border-b border-gray-100 last:border-0 last:pb-0"
+                                  >
+                                    {new URL(course?.thumbnail).protocol === "http:" ? (
+                                        <img
+                                            src={new URL(course?.thumbnail).pathname}
+                                            alt={course.title}
+                                            className="w-12 h-12 rounded object-cover"
+                                        />
+                                    ) : (
+                                        <img
+                                            src={course.thumbnail || "/api/placeholder/40/40"}
+                                            alt={course.title}
+                                            className="w-12 h-12 rounded object-cover"
+                                        />
+                                    )}
+                                    <div className="flex-1">
+                                      <h4 className="text-sm font-medium text-gray-800">{course.title}</h4>
+                                      <p className="text-xs text-gray-500">{user?.name}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-sm font-medium text-gray-800">
+                                        {course.price !== 0
+                                            ? `${course?.currency} ${course?.price.toLocaleString(course?.currency)}`
+                                            : "Gratis"}
+                                      </p>
+                                      <p className="text-xs text-gray-500">Harga</p>
+                                    </div>
                                   </div>
-                                  <div className="text-right">
-                                    <p className="text-sm font-medium text-gray-800">
-                                      {course.price !== 0 ? `${course?.currency} ${course?.price.toLocaleString(course?.currency)}` : "Gratis"}
-                                    </p>
-                                    <p className="text-xs text-gray-500">Harga</p>
-                                  </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-gray-500 text-center py-4">Belum ada kursus</p>
+                              ))
+                          ) : (
+                              <p className="text-gray-500 text-center py-4">Belum ada kursus</p>
+                          )}
+                        </div>
+
+                        {mentorCourses.length > 3 && (
+                            <div className="text-center pt-4">
+                              <button
+                                  onClick={() => setActiveTab("courses")}
+                                  className="text-sm text-orange-600 hover:underline font-medium"
+                              >
+                                Selengkapnya →
+                              </button>
+                            </div>
                         )}
                       </div>
+
                     </div>
 
                     <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
@@ -624,12 +729,14 @@ const MentorDashboard = () => {
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm text-gray-900">
-                                      {course.isPaid ? `${course.currency} ${course.price?.toLocaleString("id-ID")}` : "Gratis"}
+                                      {course.price !== 0
+                                          ? `${course?.currency} ${course?.price.toLocaleString(course?.currency)}`
+                                          : "Gratis"}
                                     </div>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div className="flex justify-end gap-2">
-                                      <button className="text-blue-600 hover:text-blue-900">
+                                      <button className="text-blue-600 hover:text-blue-900" onClick={handleEditClick(course)}>
                                         <Edit size={18} />
                                       </button>
                                       <button
@@ -1060,6 +1167,172 @@ const MentorDashboard = () => {
                         disabled={isCourseSubmit}
                     >
                       {isCourseSubmit ? "Membuat..." : "Buat Kursus"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+        )}
+        {/*  Edit Course Modal*/}
+        {isEditModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                  <h2 className="text-xl font-semibold text-gray-900">Edit Kursus</h2>
+                  <button
+                      onClick={closeModal}
+                      className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-md transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                  {/* Course Title */}
+                  <div>
+                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                      Judul Kursus *
+                    </label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        value={courseFormData.title}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Masukkan judul kursus"
+                    />
+                  </div>
+
+                  {/* Course Description */}
+                  <div>
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                      Deskripsi Kursus
+                    </label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        value={courseFormData.description}
+                        onChange={handleInputChange}
+                        rows={4}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Masukkan deskripsi kursus"
+                    />
+                  </div>
+
+                  {/* Price and Currency */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+                        Harga
+                      </label>
+                      <input
+                          type="number"
+                          id="price"
+                          name="price"
+                          value={courseFormData.price}
+                          onChange={handleInputChange}
+                          min="0"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-2">
+                        Mata Uang
+                      </label>
+                      <select
+                          id="currency"
+                          name="currency"
+                          value={courseFormData.currency}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="IDR">IDR</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                      Kategori
+                    </label>
+                    <input
+                        type="text"
+                        id="category"
+                        name="category"
+                        value={courseFormData.category}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Masukkan kategori kursus"
+                    />
+                  </div>
+
+                  {/* Thumbnail URL */}
+                  <div>
+                    <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-2">
+                      URL Thumbnail
+                    </label>
+                    <input
+                        type="url"
+                        id="thumbnail"
+                        name="thumbnail"
+                        value={courseFormData.thumbnail}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="https://example.com/image.jpg"
+                    />
+                  </div>
+
+                  {/* Thumbnail Preview */}
+                  {courseFormData.thumbnail && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Preview Thumbnail
+                        </label>
+                        <img
+                            src={courseFormData.thumbnail}
+                            alt="Thumbnail Preview"
+                            className="w-32 h-32 object-cover rounded-md border border-gray-300"
+                            onError={(e) => {
+                              e.target.src = "/api/placeholder/128/128";
+                            }}
+                        />
+                      </div>
+                  )}
+
+                  {/* Modal Footer */}
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                    <button
+                        type="button"
+                        onClick={closeModal}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        disabled={isSubmitting}
+                    >
+                      Batal
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {isSubmitting ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Menyimpan...
+                          </>
+                      ) : (
+                          <>
+                            <Save size={16} />
+                            Simpan Perubahan
+                          </>
+                      )}
                     </button>
                   </div>
                 </form>
