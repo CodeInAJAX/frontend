@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
 import { X, Upload, Camera } from "lucide-react"
 
 const EditProfileModal = ({ onClose }) => {
-  const { user, updateProfile } = useAuth()
+  const { user, updateProfile } = useApp()
   const [name, setName] = useState(user?.name || "")
   const [nameError, setNameError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
