@@ -13,6 +13,7 @@ import AdminLogin from "../pages/AdminLogin"
 import Payment from "../pages/Payment"
 import ProtectedRoute from "../components/ProtectedRoute"
 import MentorDashboard from "../pages/MentorDashboard"
+import MentorCourseDetail from "../pages/MentorCourseDetail"
 import UserProfile from "../pages/UserProfile"
 
 export const router = createBrowserRouter([
@@ -88,7 +89,15 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <MentorDashboard></MentorDashboard>
-    </ProtectedRoute>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/mentor/courses/:id",
+    element: (
+      <ProtectedRoute>
+        <MentorCourseDetail />
+      </ProtectedRoute>
     ),
   },
 ])
