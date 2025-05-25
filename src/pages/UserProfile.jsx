@@ -6,10 +6,11 @@ import usePageTitle from "../hooks/usePageTitle"
 import EditProfileModal from "../components/EditProfileModal"
 import { courseList } from "../utils/content"
 import { Star, BookOpen, Award, Clock } from "lucide-react"
-import { Link } from "react-router"
+import {Link} from "react-router"
 
 const UserProfile = () => {
   usePageTitle("Profil Pengguna")
+
   const { user, isCoursePurchased, getCourseProgress, getCourseRatings } = useApp()
   const [showEditModal, setShowEditModal] = useState(false)
 
@@ -25,6 +26,8 @@ const UserProfile = () => {
       </div>
     )
   }
+
+
 
   // Get user's purchased courses
   const userCourses = courseList.filter((course) => isCoursePurchased(course.id))
