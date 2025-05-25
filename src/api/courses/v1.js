@@ -14,9 +14,14 @@ const deleteCourseAPI = async (course) => {
     return await callAPI({method: "delete", path: `/courses/${course.id}`})
 }
 
+const updateCourseAPI = async (courseId, course) => {
+    return await callAPI({method: "patch", path: `/courses/${courseId}`, data: course})
+}
+
 
 export {
     getCoursesAPI,
     createCourseAPI,
-    deleteCourseAPI
+    deleteCourseAPI,
+    updateCourseAPI,
 }
