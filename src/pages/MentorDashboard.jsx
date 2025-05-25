@@ -419,10 +419,10 @@ const MentorDashboard = () => {
           return;
         }
       }
-
+      console.log(dataToSubmit)
       // Create course
       const result = await createCourses(dataToSubmit)
-
+      console.log(result)
       if (result.success) {
         setCourseStatusMessage({
           type: "success",
@@ -456,7 +456,9 @@ const MentorDashboard = () => {
       handleZodErrorsCourse(error)
     } finally {
       setIsCourseSubmit(false)
-      window.location.reload()
+      setTimeout(() => {
+          window.location.reload()
+      }, 1000)
     }
   }
 

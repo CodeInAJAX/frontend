@@ -19,15 +19,43 @@ const CourseDetail = () => {
     isLessonCompleted,
     isCourseCompleted,
     hasUserRatedCourse,
+    getCourse
   } = useApp()
 
-  const courseId = Number.parseInt(id)
-  const course = courseList.find((c) => c.id === courseId)
+  const [course, setCourse] = useState(null) 
+  const [error, setError] = useState("")
 
   const [currentVideo, setCurrentVideo] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showRatingModal, setShowRatingModal] = useState(false)
   const [showRatingSection, setShowRatingSection] = useState(false)
+
+    useEffect(() => {
+    const fetchCourse = async () => {
+      setLoading(true)
+      try {
+        const result = await getCourse(id)
+
+        if (!result.success) {
+          setError(result.message || "Gagal memuat kursus")
+          setCourse(null)
+        } else {
+          setCourse(result?.course || null)
+          setError("") // Clear error jika berhasil
+        }
+      } catch (err) {
+        setError("Terjadi kesalahan saat memuat kursus")
+        setCourse(null)
+      } finally {
+        setLoading(false) // ← Set loading false setelah API call selesai
+      }
+    }
+
+    if (id) {
+      fetchCourse()
+    }
+  }, [id, getCourse])
+
 
   useEffect(() => {
     // Check if user is logged in
@@ -43,26 +71,24 @@ const CourseDetail = () => {
     }
 
     // Check if course is purchased for paid courses
-    if (course.isPaid && !isCoursePurchased(courseId)) {
+    if (!isCoursePurchased(id)) {
       navigate(`/payment/${id}`)
       return
     }
 
-    // Set the current video to the first one or the first incomplete one
-    const progress = getCourseProgress(courseId)
-    if (progress.completed.length === 0) {
-      setCurrentVideo(course.videos[0])
-    } else {
-      // Find the first incomplete video
-      const firstIncomplete = course.videos.find((video) => !progress.completed.includes(video.id))
-      setCurrentVideo(firstIncomplete || course.videos[0])
-    }
+    // if (progress.completed.length === 0) {
+    //   setCurrentVideo(course.videos[0])
+    // } else {
+    //   // Find the first incomplete video
+    //   const firstIncomplete = course.videos.find((video) => !progress.completed.includes(video.id))
+    //   setCurrentVideo(firstIncomplete || course.videos[0])
+    // }
 
     // Determine if we should show the rating section
     setShowRatingSection(true)
 
     setLoading(false)
-  }, [user, course, courseId, id, isCoursePurchased, navigate, getCourseProgress])
+  }, [user, course, id, isCoursePurchased, navigate, getCourseProgress])
 
   if (loading) {
     return (
@@ -72,19 +98,60 @@ const CourseDetail = () => {
     )
   }
 
+  // Error state
+  if (error && !course) {
+    return (
+        <div className="min-h-screen p-10 text-center">
+          <div className="text-xl text-red-700 mb-4">Kursus tidak ditemukan</div>
+          <div className="text-gray-600">{error}</div>
+          <button
+              onClick={() => navigate(-1)}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Kembali
+          </button>
+        </div>
+    )
+  }
+
+  // Course not found
   if (!course) {
-    return <div className="min-h-screen p-10 text-center text-xl text-red-700">Kursus tidak ditemukan.</div>
+    return (
+        <div className="min-h-screen p-10 text-center">
+          <div className="text-xl text-red-700 mb-4">Kursus tidak ditemukan</div>
+          <button
+              onClick={() => navigate(-1)}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Kembali
+          </button>
+        </div>
+    )
+  }
+
+  if (user?.role !== "student") {
+    return (
+        <div className="min-h-screen p-10 text-center">
+          <div className="text-xl text-red-700 mb-4">Anda tidak dapat mengakses halaman ini</div>
+          <button
+              onClick={() => navigate("/")}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Kembali
+          </button>
+        </div>
+    )
   }
 
   const handleMarkComplete = () => {
     if (currentVideo) {
-      updateLessonProgress(courseId, currentVideo.id)
+      updateLessonProgress(id, currentVideo.id)
     }
   }
 
-  const progress = getCourseProgress(courseId)
-  const courseCompleted = isCourseCompleted(courseId)
-  const hasRated = hasUserRatedCourse(courseId)
+  const progress = getCourseProgress(id)
+  const courseCompleted = isCourseCompleted(id)
+  const hasRated = hasUserRatedCourse(id)
 
   return (
     <section className="min-h-screen px-4 py-16 md:px-12 bg-white">
