@@ -4,12 +4,12 @@ import { useState } from "react"
 import { NavLink, useNavigate } from "react-router"
 import logo from "../assets/codeinajaLogo.svg"
 import { links } from "../utils/content"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
 import ProfileDropdown from "./ProfileDropdown"
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { user, logout } = useAuth()
+  const { user, logout } = useApp()
   const navigate = useNavigate()
 
   const toggleMenu = () => {
