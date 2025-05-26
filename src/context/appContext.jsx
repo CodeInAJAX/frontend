@@ -3,7 +3,8 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import {loginAPI, logoutAPI, profileAPI, updateAPI} from "../api/users/v1.js";
 import useErrors from "../hooks/useErrors.jsx";
-import {createCourseAPI, deleteCourseAPI, getCoursesAPI, updateCourseAPI} from "../api/courses/v1.js";
+import {createCourseAPI, deleteCourseAPI, getCourseAPI, getCoursesAPI, updateCourseAPI} from "../api/courses/v1.js";
+import {createPaymentAPI} from "../api/payments/v1.js";
 // Create the auth context
 const AppContext = createContext()
 
@@ -87,7 +88,16 @@ export const AppProvider = ({ children }) => {
       }
       return { success: false, message: "Gagal menemukan user, tolong coba login lagi..." }
     } catch (error) {
-      return { success: false, message: error.message ?? "Gagal melakukan login, tolong coba login lagi..." }
+      return { success: false, message: error.message || "Gagal melakukan login, tolong coba login lagi..." }
+    }
+  }
+
+  const getCourse = async (courseId) => {
+    try {
+      const data = await getCourseAPI(courseId)
+      return { success: true, course: data, message: "Berhasil menemukan kursus" }
+    } catch (error) {
+      return { success: false, message: error.message || "Gagal menemukan kursus, tolong coba lagi..." }
     }
   }
 
@@ -119,24 +129,17 @@ export const AppProvider = ({ children }) => {
       }
       return { success: true, message: "Berhasil melakukan edit profile..." }
     } catch (error) {
-      return { success: false, message: error.message ?? "Gagal melakukan edit profile, tolong coba lagi..." }
+      return { success: false, message: error.message || "Gagal melakukan edit profile, tolong coba lagi..." }
     }
   }
 
   // Purchase course function
-  const purchaseCourse = (courseId) => {
-    if (!purchasedCourses.includes(courseId)) {
-      setPurchasedCourses([...purchasedCourses, courseId])
-
-      // Initialize progress for this course
-      setCourseProgress((prev) => ({
-        ...prev,
-        [courseId]: { completed: [], progress: 0 },
-      }))
-
-      return true
+  const purchaseCourse = async (payment) => {
+    try {
+      return { success: true, message: "Berhasil melakukan pembayaran...", payment: await createPaymentAPI(payment) }
+    } catch (error) {
+      return { success: false, message: error.message || "Gagal melakukan pembayaran, tolong coba lagi..." }
     }
-    return false
   }
   
   const getCourses = async (pageTo) => {
@@ -145,7 +148,7 @@ export const AppProvider = ({ children }) => {
       setCourses(data)
       return { success: true, message: "Berhasil mendapatkan kursus..." }
     } catch (error) {
-      return { success: false, message: error.message ?? "Gagal mendapatkan kursus, tolong coba lagi..." }
+      return { success: false, message: error.message || "Gagal mendapatkan kursus, tolong coba lagi..." }
     }
   }
 
@@ -154,13 +157,13 @@ export const AppProvider = ({ children }) => {
       await updateCourseAPI(course?.id, course);
       return { success: true, message: "Berhasil melakukan edit kursus..." }
     } catch (error) {
-      return { success: false, message: error?.message ?? "Gagal melakukan edit kursus, tolong coba lagi..." }
+      return { success: false, message: error?.message || "Gagal melakukan edit kursus, tolong coba lagi..." }
     }
   }
 
   // Check if a course is purchased
   const isCoursePurchased = (courseId) => {
-    return purchasedCourses.includes(courseId)
+    return purchasedCourses.some(course => course.id === courseId)
   }
 
   // Update lesson progress
@@ -196,7 +199,7 @@ export const AppProvider = ({ children }) => {
       await createCourseAPI(course)
       return { success: true, message: "Berhasil membuat kursus..." }
     } catch (error) {
-      return { success: false, message: error.message ?? "Gagal melakukan membuat kursus, tolong coba lagi..." }
+      return { success: false, message: error.message || "Gagal melakukan membuat kursus, tolong coba lagi..." }
     }
   }
 
@@ -205,7 +208,7 @@ export const AppProvider = ({ children }) => {
       await deleteCourseAPI(course);
       return { success: true, message: "Berhasil menghapus kursus..." }
     } catch (error) {
-      return { success: false, message: error?.message ?? "Gagal menghapus kursus, tolong coba lagi..." }
+      return { success: false, message: error.message || "Gagal menghapus kursus, tolong coba lagi..." }
     }
   }
 
@@ -329,6 +332,7 @@ export const AppProvider = ({ children }) => {
     createCourses,
     deleteCourses,
     updateCourses,
+    getCourse,
     mentorCourses,
     setMentorCourses
   }
