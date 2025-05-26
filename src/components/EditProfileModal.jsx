@@ -98,7 +98,7 @@ const EditProfileModal = ({ onClose }) => {
       if (formData.photo) {
         try {
           const { file_url } = await uploadsProfileAPI(formData.photo);
-          dataToSubmit.photo = file_url;
+          formData.photo = file_url;
         } catch (uploadError) {
           console.error("Error uploading photo:", uploadError);
           setStatusMessage({
