@@ -26,6 +26,10 @@ const UserProfile = () => {
     )
   }
 
+  if (user?.role == "mentor") {
+    window.location.href = "/mentor"
+  }
+
   // Get user's purchased courses
   const userCourses = courseList.filter((course) => isCoursePurchased(course.id))
 
