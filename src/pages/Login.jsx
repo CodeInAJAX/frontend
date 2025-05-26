@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useNavigate, useLocation } from "react-router"
 import { Link } from "react-router"
 import bgGrid from "../assets/bgGrid.png"
@@ -8,7 +7,10 @@ import logo from "../assets/codeinajaLogo.svg"
 import usePageTitle from "../hooks/usePageTitle"
 import { useApp } from "../context/appContext.jsx"
 import {loginSchema} from "../validation/users.js";
-import z from "zod";
+import useErrors from "../hooks/useErrors.jsx";
+import useSubmitting from "../hooks/useSubmitting.jsx";
+import useStatusMessage from "../hooks/useStatusMessage.jsx";
+import useForm from "../hooks/useForm.jsx";
 
 const Login = () => {
   usePageTitle("Login")
@@ -16,34 +18,27 @@ const Login = () => {
   const location = useLocation()
   const { login } = useApp()
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [statusMessage, setStatusMessage] = useState({ type: "", message: "" })
+  // State for errors message
+  const { errors, setErrors, handleWhenInputForm, handleZodErrors } = useErrors();
 
-  const [formData, setFormData] = useState({
+  // State for loading and status message
+  const {isSubmitting, setIsSubmitting} = useSubmitting()
+  const { statusMessage, setStatusMessage } = useStatusMessage()
+
+  const {formData, handleValidation, handleChangeForm} = useForm({
     email: "",
     password: "",
     confirmPassword: ""
   })
-  const [errors, setErrors] = useState({})
+
 
   // Get the redirect path from location state or default to homepage
   const from = location.state?.from || "/"
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-
-
+    handleChangeForm(e)
     // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }))
-    }
+    handleWhenInputForm(e)
   }
 
   const handleSubmit = async (e) => {
@@ -52,7 +47,7 @@ const Login = () => {
       setErrors({})
       setIsSubmitting(true)
 
-      loginSchema.parse(formData)
+      handleValidation(loginSchema)
 
       const result = await login(formData)
 
@@ -73,13 +68,7 @@ const Login = () => {
         })
       }
     } catch (zodError) {
-      const formattedErrors = {}
-      if (zodError instanceof z.ZodError) {
-        zodError.errors.forEach((err) => {
-          formattedErrors[err.path[0]] = err.message
-        })
-      }
-      setErrors(formattedErrors)
+      handleZodErrors(zodError)
     } finally {
       setIsSubmitting(false)
     }
