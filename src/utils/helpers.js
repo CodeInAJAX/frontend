@@ -11,15 +11,39 @@ export const axiosErrorResponseToMessage = (error) => {
     }).join(",");
 }
 
+
 export const callAPI = async ({ method, path, data }) => {
     try {
-        const axiosResponse = await axiosInstance({
+        const axiosResponse = data ? await axiosInstance({
             method,
             url: path,
             data,
+        }) : await axiosInstance({
+            method,
+            url: path,
         });
 
         return axiosResponse.data?.data;
+    } catch (error) {
+        if (error instanceof AxiosError) {
+            throw new Error(axiosErrorResponseToMessage(error));
+        }
+        throw error;
+    }
+};
+
+export const callAPIWithMeta = async ({ method, path, data }) => {
+    try {
+        const axiosResponse = data ? await axiosInstance({
+            method,
+            url: path,
+            data,
+        }) : await axiosInstance({
+            method,
+            url: path,
+        });
+
+        return { data: axiosResponse.data?.data, meta: axiosResponse?.data.meta };
     } catch (error) {
         if (error instanceof AxiosError) {
             throw new Error(axiosErrorResponseToMessage(error));
