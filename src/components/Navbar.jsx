@@ -30,7 +30,6 @@ const Navbar = () => {
   }
 
   // Get initials for avatar fallback
-  //
 
   return (
     <nav className="flex items-center justify-between px-4 md:px-12 py-4 bg-white shadow-sm w-full">
