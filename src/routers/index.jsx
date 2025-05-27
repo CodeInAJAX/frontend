@@ -21,10 +21,26 @@ export const router = createBrowserRouter([
     element: <RootLayout />,
     errorElement: <ErrorPage />,
     children: [
-      { path: "/", element: <Homepage /> },
-      { path: "/about", element: <About /> },
-      { path: "/contact", element: <Contact /> },
-      { path: "/courses", element: <Course /> },
+      { path: "/", element:(
+            <ProtectedRoute>
+              <Homepage />
+            </ProtectedRoute>
+        ) },
+      { path: "/about", element: (
+          <ProtectedRoute>
+            <About />
+          </ProtectedRoute>
+        ) },
+      { path: "/contact", element: (
+          <ProtectedRoute>
+            <Contact />
+          </ProtectedRoute>
+        ) },
+      { path: "/courses", element: (
+          <ProtectedRoute>
+            <Course />
+          </ProtectedRoute>
+        ) },
       {
         path: "/course/:id",
         element: (
