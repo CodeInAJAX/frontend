@@ -3,11 +3,14 @@ import bgGrid from "../assets/bgGrid.png"
 import logo from "../assets/codeinajaLogo.svg"
 import usePageTitle from "../hooks/usePageTitle"
 import useRole from "../hooks/useRole"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { registerSchema } from "../validation/users.js"
-import z from "zod"
 import {registerAPI} from "../api/users/v1.js";
 import useGender from "../hooks/useGender.jsx";
+import useErrors from "../hooks/useErrors.jsx";
+import useStatusMessage from "../hooks/useStatusMessage.jsx";
+import useForm from "../hooks/useForm.jsx";
+import useSubmitting from "../hooks/useSubmitting.jsx";
 
 const Register = () => {
   usePageTitle("Register")
@@ -15,21 +18,23 @@ const Register = () => {
   const { gender, handleGenderChange } = useGender()
 
   // State for form data
-  const [formData, setFormData] = useState({
+  const { formData, setFormData, handleChangeForm, handleValidation} = useForm({
     nama: "",
     email: "",
     password: "",
     role: role,
     gender: gender,
     photo: null,
-  })
+  });
 
   // State for errors message
-  const [errors, setErrors] = useState({})
+  const { errors, setErrors, handleWhenInputForm, handleZodErrors } = useErrors();
 
   // State for loading and status message
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [statusMessage, setStatusMessage] = useState({ type: "", message: "" })
+  const {isSubmitting, setIsSubmitting} = useSubmitting()
+  const { statusMessage, setStatusMessage } = useStatusMessage()
+
+
 
   // Update role in form data when role is changed
   useEffect(() => {
@@ -45,19 +50,10 @@ const Register = () => {
 
   // Handler for input change
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    handleChangeForm(e);
 
     // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }))
-    }
+    handleWhenInputForm(e)
   }
 
   // Handler for form submit
@@ -66,7 +62,7 @@ const Register = () => {
 
     // Validasi form with Zod
     try {
-      registerSchema.parse(formData)
+      handleValidation(registerSchema);
       // clear errors when valid data
       setErrors({})
 
@@ -95,7 +91,7 @@ const Register = () => {
 
         // Reset form after success response
         setFormData({
-          nama: "",
+          name: "",
           email: "",
           password: "",
           role: role,
@@ -123,13 +119,7 @@ const Register = () => {
         setIsSubmitting(false)
       }
     } catch (zodError) {
-      const formattedErrors = {}
-      if (zodError instanceof z.ZodError) {
-        zodError.errors.forEach((err) => {
-          formattedErrors[err.path[0]] = err.message
-        })
-      }
-      setErrors(formattedErrors)
+      handleZodErrors(zodError);
     }
   }
 
@@ -165,13 +155,13 @@ const Register = () => {
             <div>
               <input
                   type="text"
-                  name="nama"
-                  value={formData.nama}
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
                   placeholder="Masukkan Nama"
-                  className={`input-style ${errors.nama ? "border-red-500" : ""}`}
+                  className={`input-style ${errors.name ? "border-red-500" : ""}`}
               />
-              {errors.nama && <p className="text-red-500 text-xs mt-1">{errors.nama}</p>}
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
 
             <div>
