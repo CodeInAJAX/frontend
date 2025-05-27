@@ -30,7 +30,7 @@ const OnlineCourse =  () => {
     }
 
     // If course is paid and not purchased, redirect to payment
-    if (course.isPaid && !isCoursePurchased(course.id)) {
+    if (!isCoursePurchased(course.id)) {
       navigate(`/payment/${course.id}`);
       return;
     }
@@ -105,7 +105,7 @@ const OnlineCourse =  () => {
                   >
                     {!user
                         ? "Masuk untuk Belajar"
-                        : course.isPaid && !isCoursePurchased(course.id)
+                        : !isCoursePurchased(course.id)
                             ? "Beli Kursus"
                             : "Belajar Sekarang"}
                   </button>
