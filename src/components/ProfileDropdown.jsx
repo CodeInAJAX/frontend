@@ -2,12 +2,12 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
 import { User, LogOut } from "lucide-react"
 import EditProfileModal from "./EditProfileModal"
 
 const ProfileDropdown = () => {
-  const { user, logout } = useAuth()
+  const { user, logout } = useApp()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
