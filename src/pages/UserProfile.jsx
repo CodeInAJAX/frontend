@@ -61,17 +61,17 @@ const UserProfile = () => {
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             {/* Profile Photo */}
             <div className="relative">
-              {user.photo ? (
-                <img
-                  src={user.photo || "/placeholder.svg"}
-                  alt={user.name}
-                  className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-orange-100"
-                />
+              {user?.profile?.photo ? (
+                  <img
+                      src={new URL(user.profile.photo).pathname}
+                      alt={user.name}
+                      className="w-8 h-8 rounded-full object-cover border-2 border-white"
+                  />
               ) : (
                   <img
-                      src="/assets/profile.jpg"
+                      src={window.location.origin + "/assets/profile.jpg"}
                       alt={user.name}
-                      className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-orange-100"
+                      className="w-8 h-8 rounded-full object-cover border-2 border-white"
                   />
               )}
             </div>
