@@ -1,10 +1,10 @@
 "use client"
 
 import { Navigate, useLocation } from "react-router"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth()
+  const { user, loading } = useApp()
   const location = useLocation()
 
   if (loading) {
