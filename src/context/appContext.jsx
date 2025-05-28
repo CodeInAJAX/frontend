@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import {loginAPI, logoutAPI, profileAPI, updateAPI} from "../api/users/v1.js";
 import useErrors from "../hooks/useErrors.jsx";
-import {createCourseAPI, deleteCourseAPI, getCoursesAPI} from "../api/courses/v1.js";
+import {createCourseAPI, deleteCourseAPI, getCoursesAPI, updateCourseAPI} from "../api/courses/v1.js";
 // Create the auth context
 const AppContext = createContext()
 
@@ -36,9 +36,13 @@ export const AppProvider = ({ children }) => {
       }
 
       try {
+        // if user not defined and not null setLoading timeout 1 secodns
         const user = await profileAPI()
+        await getCourses(1)
         setUser(user || null)
         setMentorCourses(user?.courses || [])
+        setPurchasedCourses(user?.enrolledCourses || [])
+
       } catch (error) {
         setUser(null)
         setErrors({
@@ -46,25 +50,19 @@ export const AppProvider = ({ children }) => {
           message: error.message,
         })
       } finally {
-        setLoading(false)
+        setLoading(true)
       }
     }
     // Load local storage
-    const storedPurchasedCourses = localStorage.getItem("purchasedCourses")
     const storedProgress = localStorage.getItem("courseProgress")
     const storedRatings = localStorage.getItem("courseRatings")
 
-    if (storedPurchasedCourses) setPurchasedCourses(JSON.parse(storedPurchasedCourses))
     if (storedProgress) setCourseProgress(JSON.parse(storedProgress))
     if (storedRatings) setCourseRatings(JSON.parse(storedRatings))
 
     fetchUser()
+    setTimeout(() => { setLoading(false) }, 1000)
   }, [])
-
-  // Save purchased courses to localStorage
-  useEffect(() => {
-    localStorage.setItem("purchasedCourses", JSON.stringify(purchasedCourses))
-  }, [purchasedCourses])
 
   // Save course progress to localStorage
   useEffect(() => {
@@ -143,11 +141,20 @@ export const AppProvider = ({ children }) => {
   
   const getCourses = async (pageTo) => {
     try {
-      const data = await getCoursesAPI(pageTo, 20)
+      const data = await getCoursesAPI(pageTo, 10)
       setCourses(data)
       return { success: true, message: "Berhasil mendapatkan kursus..." }
     } catch (error) {
       return { success: false, message: error.message ?? "Gagal mendapatkan kursus, tolong coba lagi..." }
+    }
+  }
+
+  const updateCourses = async (course) => {
+    try {
+      await updateCourseAPI(course?.id, course);
+      return { success: true, message: "Berhasil melakukan edit kursus..." }
+    } catch (error) {
+      return { success: false, message: error?.message ?? "Gagal melakukan edit kursus, tolong coba lagi..." }
     }
   }
 
@@ -321,6 +328,7 @@ export const AppProvider = ({ children }) => {
     likeRating,
     createCourses,
     deleteCourses,
+    updateCourses,
     mentorCourses,
     setMentorCourses
   }
@@ -332,7 +340,7 @@ export const AppProvider = ({ children }) => {
 export const useApp = () => {
   const context = useContext(AppContext)
   if (!context) {
-    throw new Error("useAuth must be used within an AppProvider")
+    throw new Error("useApp must be used within an AppProvider")
   }
   return context
 }
