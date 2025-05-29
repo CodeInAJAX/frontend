@@ -11,7 +11,7 @@ const useMentorRedirect = (user) => {
   useEffect(() => {
     // Only redirect if we're done loading and user is not a mentor
     if (!isLoading && !isMentorLoggedIn) {
-      navigate("/login", { state: { from: "/mentor" } })
+      navigate("/", { state: { from: "/mentor" } })
     }
   }, [isMentorLoggedIn, navigate, isLoading])
 
