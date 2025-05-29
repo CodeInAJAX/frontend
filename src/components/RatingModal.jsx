@@ -2,11 +2,11 @@
 
 import { useState } from "react"
 import StarRating from "./StarRating"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
 import { X } from "lucide-react"
 
 const RatingModal = ({ courseId, courseName, onClose, onRatingSubmitted }) => {
-  const { user, submitRating } = useAuth()
+  const { user, submitRating } = useApp()
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState("")
   const [error, setError] = useState("")
