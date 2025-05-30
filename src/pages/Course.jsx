@@ -1,30 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import {useState} from "react"
 import { useNavigate } from "react-router"
 import usePageTitle from "../hooks/usePageTitle"
-import { courseList } from "../utils/content"
 import { useApp } from "../context/appContext.jsx"
+import {urlTrim} from "../utils/helpers.js";
 
-const OnlineCourse = () => {
+const OnlineCourse =  () => {
   usePageTitle("Kursus Online");
   const [search, setSearch] = useState("");
-  const { user, isCoursePurchased, getCourseProgress } = useApp();
+  const { user, isCoursePurchased, getCourseProgress, courses, getCourses } = useApp();
   const navigate = useNavigate();
-
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const coursesPerPage = 6;
+  const coursesPerPage = courses?.meta?.per_page;
 
-  const filteredCourses = courseList.filter((course) =>
-      course.title.toLowerCase().includes(search.toLowerCase())
-  );
+
+  const filteredCourses = courses?.data.filter((course) => course.title.toLowerCase().includes(search.toLowerCase()));
 
   // Calculate pagination
-  const indexOfLastCourse = currentPage * coursesPerPage;
-  const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
-  const currentCourses = filteredCourses.slice(indexOfFirstCourse, indexOfLastCourse);
-  const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
+  const currentCourses = filteredCourses;
+  const totalPages = Math.ceil(courses?.meta?.total / coursesPerPage);
 
   const handleCourseClick = (course) => {
     // If user is not logged in, redirect to login
@@ -44,8 +40,9 @@ const OnlineCourse = () => {
   };
 
   // Change page handler
-  const changePage = (pageNumber) => {
+  const changePage = async (pageNumber) => {
     setCurrentPage(pageNumber);
+    await getCourses(pageNumber);
     // Scroll to top when page changes
     window.scrollTo(0, 0);
   };
@@ -70,7 +67,7 @@ const OnlineCourse = () => {
               <div key={course.id} className="rounded-xl overflow-hidden bg-gray-800 text-white shadow-md">
                 <div className="bg-white flex items-center justify-center">
                   <img
-                      src={course.image || "/placeholder.svg"}
+                      src={urlTrim(course?.thumbnail) || "/assets/thumbnail.jpg"}
                       alt={course.title}
                       className="max-h-full max-w-full object-contain"
                   />
@@ -78,15 +75,15 @@ const OnlineCourse = () => {
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="text-xl font-semibold">{course.title}</h3>
-                    {course.isPaid ? (
+                    {course.price !== 0 ? (
                         <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded">
-                    Rp {course.price.toLocaleString("id-ID")}
+                    {course?.currency}: {course.price.toLocaleString(course?.currency)}
                   </span>
                     ) : (
                         <span className="bg-green-500 text-white text-xs px-2 py-1 rounded">Gratis</span>
                     )}
                   </div>
-                  <p className="text-sm mb-4 text-white/75">Mentor: {course.mentor}</p>
+                  <p className="text-sm mb-4 text-white/75">Mentor: {course.mentor?.name}</p>
 
                   {user && isCoursePurchased(course.id) && (
                       <div className="mb-3">
