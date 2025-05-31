@@ -24,6 +24,7 @@ import {
   Video,
   Users,
   Camera,
+  X,Save
 } from "lucide-react"
 import useStatusMessage from "../hooks/useStatusMessage.jsx";
 import useForm from "../hooks/useForm.jsx";
@@ -32,13 +33,14 @@ import {editUserSchema} from "../validation/users.js";
 import {uploadsProfileAPI, uploadsThumbnailAPI} from "../api/uploads/v1.js";
 import useSubmitting from "../hooks/useSubmitting.jsx";
 import useErrors from "../hooks/useErrors.jsx";
-import {createCourseSchema} from "../validation/courses.js";
+import {createCourseSchema, updateCourseSchema} from "../validation/courses.js";
+import {urlTrim} from "../utils/helpers.js";
 
 const MentorDashboard = () => {
   usePageTitle("Mentor Dashboard")
 
   const navigate = useNavigate()
-  const { user, logout, updateProfile, createCourses, mentorCourses,deleteCourses } = useApp()
+  const { user, logout, updateProfile, createCourses, mentorCourses,deleteCourses, updateCourses } = useApp()
 
   useMentorRedirect(user)
 
@@ -60,8 +62,8 @@ const MentorDashboard = () => {
   const {
     formData: courseFormData,
     setFormData: setCourseFormData,
-    handleChangeForm: handleChangeFormCourse,
-    handleValidation: handleCourseFormValidation
+    handleValidation: handleCourseFormValidation,
+      handleChangeForm: handleCourseFormChange,
   } = useForm({
     title: "",
     description: "",
@@ -94,10 +96,8 @@ const MentorDashboard = () => {
 
   // Image State untuk Profile
   const photo = user?.profile?.photo ?
-      (new URL(user?.profile?.photo).protocol === "http:" ?
-          new URL(user?.profile?.photo).pathname :
-          user?.profile?.photo) :
-      ""
+      (urlTrim(user?.profile?.photo)) :
+      "/assets/profile.jpg"
   const [imagePreview, setImagePreview] = useState(photo || "")
   const [imageFile, setImageFile] = useState(null)
   const [imageError, setImageError] = useState("")
@@ -252,81 +252,107 @@ const MentorDashboard = () => {
   )
 
   // Handle delete course
-  const handleDeleteClick = (course) => {
+  const handleDeleteCourseClick = (course) => {
     setSelectedCourse(course)
     setShowDeleteModal(true)
   }
 
-  // Handle edit course
-  // Handle edit click
-  const handleEditClick = (course) => {
+  const handleEditCourseClick = (course) => {
+
     setCourseFormData({
       id: course.id,
-      title: course.title,
+      title: course.title || '',
       description: course.description || '',
-      price: course.price,
+      price: course.price || 0,
       currency: course.currency || 'IDR',
-      thumbnail: course.thumbnail
+      thumbnail: course.thumbnail || null,
     });
-    setIsEditModalOpen(true);
+
+    if (course.thumbnail) {
+      setThumbnailPreview(course.thumbnail);
+    }
+
+    setTimeout(() => {
+      setIsEditModalOpen(true);
+    }, 100);
   };
 
-  const handleEditSubmit =  async (e) => {
+  const handleEditCourseSubmit =  async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setIsSubmitting(true);
+      setErrors({})
+      // Validate form
+      handleCourseFormValidation(updateCourseSchema)
 
-      // Update the course in the list
-      const updatedCourses = mentorCourses.map(course =>
-          course.id === courseFormData.id
-              ? { ...course, ...courseFormData }
-              : course
-      );
+      // Create data to submit
+      const dataToSubmit = { ...courseFormData }
 
-      setMentorCourses(updatedCourses);
-      setFilteredCourses(updatedCourses);
+      // Handle thumbnail upload if there's a file
+      if (courseFormData.thumbnail instanceof File) {
+        try {
+          const { file_url } = await uploadsThumbnailAPI(courseFormData.thumbnail)
+          dataToSubmit.thumbnail = file_url;
+        } catch (uploadError) {
+          console.error("Error uploading thumbnail:", uploadError);
+          setCourseStatusMessage({
+            type: "error",
+            message: "Gagal mengupload thumbnail, silakan coba lagi"
+          });
+          return;
+        }
+      } else {
+        delete dataToSubmit.thumbnail;
+      }
+
+      // Update the course in the API
+      const result = await updateCourses(dataToSubmit);
+
 
       // Close modal and reset form
-      setIsEditModalOpen(false);
       setCourseFormData({
         id: '',
         title: '',
         description: '',
         price: 0,
         currency: 'IDR',
-        category: '',
         thumbnail: ''
       });
 
-      // Show success message (you can replace this with your notification system)
-      alert('Kursus berhasil diperbarui!');
-
+      setCourseStatusMessage({
+        type: result.success ? "success" : "error",
+        message: result.message,
+      })
+      setTimeout(() => {
+        setIsEditModalOpen(false)
+        setCourseStatusMessage({ type: "", message: "" })
+      }, 2000)
     } catch (error) {
-      console.error('Error updating course:', error);
-      alert('Gagal memperbarui kursus. Silakan coba lagi.');
+      handleZodErrorsCourse(error)
     } finally {
       setIsSubmitting(false);
+      window.location.reload()
     }
   };
 
   // Close modal
-  const closeModal = () => {
+  const closeEditModal = () => {
     setIsEditModalOpen(false);
+    setThumbnailPreview('')
+    setThumbnailFile(null)
+    setCourseStatusMessage({ type: "", message: "" })
     setCourseFormData({
       id: '',
       title: '',
       description: '',
       price: 0,
       currency: 'IDR',
-      category: '',
       thumbnail: ''
     });
   };
 
-  const confirmDelete = () => {
+  const confirmDeleteCourse = () => {
     // In a real app, you would call an API to delete the course
     deleteCourses(selectedCourse)
     setShowDeleteModal(false)
@@ -336,7 +362,7 @@ const MentorDashboard = () => {
 
 // Handle new course form
   const handleNewCourseChange = (e) => {
-    const { name, value, type, checked } = e.target
+    const { name, value, checked } = e.target
 
     setCourseFormData(prev => {
       const isPaid = name === "isPaid" ? checked : prev.isPaid
@@ -354,7 +380,16 @@ const MentorDashboard = () => {
     handleWhenCourseInput(e)
   }
 
-
+// Handle edit course form
+  const handleEditCourseChange = (e) => {
+    const { name, value } = e.target
+    setCourseFormData(prev => ({
+      ...prev,
+      [name]: name === "price" ? parseInt(value, 10)
+          : value,
+    }))
+    handleWhenCourseInput(e)
+  }
 
 
   const handleNewCourseSubmit = async (e) => {
@@ -401,7 +436,6 @@ const MentorDashboard = () => {
           thumbnail: null,
           price: 0,
           currency: "IDR",
-          isPaid: false
         })
         setThumbnailPreview("")
         setThumbnailFile(null)
@@ -419,7 +453,6 @@ const MentorDashboard = () => {
       }
 
     } catch (error) {
-      console.error("Course creation error:", error)
       handleZodErrorsCourse(error)
     } finally {
       setIsCourseSubmit(false)
@@ -503,16 +536,14 @@ const MentorDashboard = () => {
                 {user?.profile?.photo ? (
                     <img
                         src={
-                          new URL(user.profile.photo).protocol === "http:"
-                              ? new URL(user.profile.photo).pathname
-                              : user.profile.photo
+                          urlTrim(user?.profile?.photo)
                         }
                         alt={user.name}
                         className="w-8 h-8 rounded-full object-cover border-2 border-white"
                     />
                 ) : (
                     <img
-                        src="/api/placeholder/32/32"
+                        src="/assets/profile.jpg"
                         alt="Profile Preview"
                         className="w-8 h-8 rounded-full object-cover border-2 border-orange-500"
                     />
@@ -553,59 +584,55 @@ const MentorDashboard = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
                       <h3 className="text-lg font-semibold text-gray-800 mb-4">Kursus Anda</h3>
-                      <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Kursus Anda</h3>
-                        <div className="space-y-4">
-                          {mentorCourses.length > 0 ? (
-                              mentorCourses.slice(0, 3).map((course, index) => (
-                                  <div
-                                      key={index}
-                                      className="flex items-center gap-3 pb-3 border-b border-gray-100 last:border-0 last:pb-0"
-                                  >
-                                    {new URL(course?.thumbnail).protocol === "http:" ? (
-                                        <img
-                                            src={new URL(course?.thumbnail).pathname}
-                                            alt={course.title}
-                                            className="w-12 h-12 rounded object-cover"
-                                        />
-                                    ) : (
-                                        <img
-                                            src={course.thumbnail || "/api/placeholder/40/40"}
-                                            alt={course.title}
-                                            className="w-12 h-12 rounded object-cover"
-                                        />
-                                    )}
-                                    <div className="flex-1">
-                                      <h4 className="text-sm font-medium text-gray-800">{course.title}</h4>
-                                      <p className="text-xs text-gray-500">{user?.name}</p>
-                                    </div>
-                                    <div className="text-right">
-                                      <p className="text-sm font-medium text-gray-800">
-                                        {course.price !== 0
-                                            ? `${course?.currency} ${course?.price.toLocaleString(course?.currency)}`
-                                            : "Gratis"}
-                                      </p>
-                                      <p className="text-xs text-gray-500">Harga</p>
-                                    </div>
+                      <div className="space-y-4">
+                        {mentorCourses.length > 0 ? (
+                            mentorCourses.slice(0, 3).map((course, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center gap-3 pb-3 border-b border-gray-100 last:border-0 last:pb-0"
+                                >
+                                  {new URL(course?.thumbnail).protocol === "http:" ? (
+                                      <img
+                                          src={new URL(course?.thumbnail).pathname}
+                                          alt={course.title}
+                                          className="w-12 h-12 rounded object-cover"
+                                      />
+                                  ) : (
+                                      <img
+                                          src={course.thumbnail || "/assets/thumbnail.png"}
+                                          alt={course.title}
+                                          className="w-12 h-12 rounded object-cover"
+                                      />
+                                  )}
+                                  <div className="flex-1">
+                                    <h4 className="text-sm font-medium text-gray-800">{course.title}</h4>
+                                    <p className="text-xs text-gray-500">{user?.name}</p>
                                   </div>
-                              ))
-                          ) : (
-                              <p className="text-gray-500 text-center py-4">Belum ada kursus</p>
-                          )}
-                        </div>
-
-                        {mentorCourses.length > 3 && (
-                            <div className="text-center pt-4">
-                              <button
-                                  onClick={() => setActiveTab("courses")}
-                                  className="text-sm text-orange-600 hover:underline font-medium"
-                              >
-                                Selengkapnya →
-                              </button>
-                            </div>
+                                  <div className="text-right">
+                                    <p className="text-sm font-medium text-gray-800">
+                                      {course.price !== 0
+                                          ? `${course?.currency} ${course?.price.toLocaleString(course?.currency)}`
+                                          : "Gratis"}
+                                    </p>
+                                    <p className="text-xs text-gray-500">Harga</p>
+                                  </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-gray-500 text-center py-4">Belum ada kursus</p>
                         )}
                       </div>
 
+                      {mentorCourses.length > 3 && (
+                          <div className="text-center pt-4">
+                            <button
+                                onClick={() => setActiveTab("courses")}
+                                className="text-sm text-orange-600 hover:underline font-medium"
+                            >
+                              Selengkapnya →
+                            </button>
+                          </div>
+                      )}
                     </div>
 
                     <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
@@ -684,7 +711,7 @@ const MentorDashboard = () => {
                             Status
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Jumlah Video
+                            Jumlah Dibeli
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Harga
@@ -725,7 +752,7 @@ const MentorDashboard = () => {
                               </span>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-900">{course.videos?.length || 0}</div>
+                                    <div className="text-sm text-gray-900">{course.payments?.length || 0}</div>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm text-gray-900">
@@ -736,12 +763,12 @@ const MentorDashboard = () => {
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div className="flex justify-end gap-2">
-                                      <button className="text-blue-600 hover:text-blue-900" onClick={handleEditClick(course)}>
+                                      <button className="text-blue-600 hover:text-blue-900" onClick={() => handleEditCourseClick(course)}>
                                         <Edit size={18} />
                                       </button>
                                       <button
                                           className="text-red-600 hover:text-red-900"
-                                          onClick={() => handleDeleteClick(course)}
+                                          onClick={() => handleDeleteCourseClick(course)}
                                       >
                                         <Trash2 size={18} />
                                       </button>
@@ -992,7 +1019,7 @@ const MentorDashboard = () => {
                   >
                     Batal
                   </button>
-                  <button onClick={confirmDelete} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                  <button onClick={confirmDeleteCourse} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
                     Hapus
                   </button>
                 </div>
@@ -1096,7 +1123,6 @@ const MentorDashboard = () => {
                               value={courseFormData.price}
                               onChange={handleNewCourseChange}
                               min="0"
-                              step="1000"
                               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                               required={courseFormData.isPaid}
                           />
@@ -1175,13 +1201,23 @@ const MentorDashboard = () => {
         )}
         {/*  Edit Course Modal*/}
         {isEditModalOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                 {/* Modal Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
                   <h2 className="text-xl font-semibold text-gray-900">Edit Kursus</h2>
+                  {/* Status Message untuk Course */}
+                  {courseStatusMessage.message && (
+                      <div
+                          className={`mb-4 p-3 rounded-lg text-sm ${
+                              courseStatusMessage.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                          }`}
+                      >
+                        {courseStatusMessage.message}
+                      </div>
+                  )}
                   <button
-                      onClick={closeModal}
+                      onClick={closeEditModal}
                       className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-md transition-colors"
                   >
                     <X size={20} />
@@ -1189,7 +1225,7 @@ const MentorDashboard = () => {
                 </div>
 
                 {/* Modal Body */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                <form onSubmit={handleEditCourseSubmit} className="p-6 space-y-6">
                   {/* Course Title */}
                   <div>
                     <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
@@ -1200,11 +1236,12 @@ const MentorDashboard = () => {
                         id="title"
                         name="title"
                         value={courseFormData.title}
-                        onChange={handleInputChange}
+                        onChange={handleEditCourseChange}
                         required
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Masukkan judul kursus"
                     />
+                    {errorsCourse.title && <p className="mt-1 text-sm text-red-500">{errorsCourse.title}</p>}
                   </div>
 
                   {/* Course Description */}
@@ -1216,11 +1253,12 @@ const MentorDashboard = () => {
                         id="description"
                         name="description"
                         value={courseFormData.description}
-                        onChange={handleInputChange}
+                        onChange={handleEditCourseChange}
                         rows={4}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Masukkan deskripsi kursus"
                     />
+                    {errorsCourse.description && <p className="mt-1 text-sm text-red-500">{errorsCourse.description}</p>}
                   </div>
 
                   {/* Price and Currency */}
@@ -1234,11 +1272,12 @@ const MentorDashboard = () => {
                           id="price"
                           name="price"
                           value={courseFormData.price}
-                          onChange={handleInputChange}
+                          onChange={handleEditCourseChange}
                           min="0"
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0"
                       />
+                      {errorsCourse.price && <p className="mt-1 text-sm text-red-500">{errorsCourse.price}</p>}
                     </div>
                     <div>
                       <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-2">
@@ -1248,70 +1287,73 @@ const MentorDashboard = () => {
                           id="currency"
                           name="currency"
                           value={courseFormData.currency}
-                          onChange={handleInputChange}
+                          onChange={handleEditCourseChange}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                       >
                         <option value="IDR">IDR</option>
                         <option value="USD">USD</option>
                         <option value="EUR">EUR</option>
                       </select>
+                      {errorsCourse.currency && <p className="mt-1 text-sm text-red-500">{errorsCourse.currency}</p>}
                     </div>
                   </div>
 
-                  {/* Category */}
                   <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-                      Kategori
+                    <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-1">
+                      Thumbnail Kursus
                     </label>
-                    <input
-                        type="text"
-                        id="category"
-                        name="category"
-                        value={courseFormData.category}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Masukkan kategori kursus"
-                    />
-                  </div>
 
-                  {/* Thumbnail URL */}
-                  <div>
-                    <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-2">
-                      URL Thumbnail
-                    </label>
-                    <input
-                        type="url"
-                        id="thumbnail"
-                        name="thumbnail"
-                        value={courseFormData.thumbnail}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="https://example.com/image.jpg"
-                    />
-                  </div>
+                    {/* Thumbnail Preview */}
+                    {thumbnailPreview ? <div className="mb-3">
+                      <img
+                          src={urlTrim(thumbnailPreview)}
+                          alt="Thumbnail Preview"
+                          className="w-32 h-20 object-cover rounded-md border"
+                      />
+                    </div> : (
+                        <div className="mb-3">
+                          <img
+                              src={urlTrim(courseFormData.thumbnail)}
+                              alt="Thumbnail Preview"
+                              className="w-32 h-20 object-cover rounded-md border"
+                          />
+                        </div>
+                    )}
 
-                  {/* Thumbnail Preview */}
-                  {courseFormData.thumbnail && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Preview Thumbnail
-                        </label>
-                        <img
-                            src={courseFormData.thumbnail}
-                            alt="Thumbnail Preview"
-                            className="w-32 h-32 object-cover rounded-md border border-gray-300"
-                            onError={(e) => {
-                              e.target.src = "/api/placeholder/128/128";
-                            }}
-                        />
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                      <div className="space-y-1 text-center">
+                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                        <div className="flex text-sm text-gray-600">
+                          <label
+                              htmlFor="thumbnail-upload"
+                              className="relative cursor-pointer bg-white rounded-md font-medium text-orange-500 hover:text-orange-600"
+                          >
+                            <span>Upload gambar</span>
+                            <input
+                                id="thumbnail-upload"
+                                name="thumbnail-upload"
+                                type="file"
+                                className="sr-only"
+                                ref={thumbnailFileInputRef}
+                                onChange={handleThumbnailChange}
+                                accept="image/*"
+                            />
+                          </label>
+                          <p className="pl-1">atau drag and drop</p>
+                        </div>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF hingga 10MB</p>
                       </div>
-                  )}
+                    </div>
+                    {thumbnailError && <p className="mt-1 text-sm text-red-500">{thumbnailError}</p>}
+                    {errorsCourse.thumbnail && <p className="mt-1 text-sm text-red-500">{errorsCourse.thumbnail}</p>}
+                  </div>
+
 
                   {/* Modal Footer */}
                   <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
                     <button
                         type="button"
-                        onClick={closeModal}
+                        onClick={closeEditModal}
                         className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         disabled={isSubmitting}
                     >
