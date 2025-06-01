@@ -1,11 +1,11 @@
 "use client"
 
 import { useNavigate } from "react-router"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
 
 const useMentorAuth = () => {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user } = useApp()
 
   const isMentorLoggedIn = user && user.role === "guru"
 
