@@ -19,7 +19,7 @@ const Register = () => {
 
   // State for form data
   const { formData, setFormData, handleChangeForm, handleValidation} = useForm({
-    nama: "",
+    name: "",
     email: "",
     password: "",
     role: role,
@@ -74,7 +74,7 @@ const Register = () => {
 
         // Format data to send request api
         const userData = {
-          name: formData.nama,
+          name: formData.name,
           email: formData.email,
           password: formData.password,
           role: formData.role,
