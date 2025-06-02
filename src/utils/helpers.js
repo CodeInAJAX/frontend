@@ -52,3 +52,8 @@ export const callAPIWithMeta = async ({ method, path, data }) => {
     }
 };
 
+
+export const urlTrim = (url) => {
+    const urlInstance = new URL(url);
+    return urlInstance.protocol === "http:" ?urlInstance.pathname : url;
+}
