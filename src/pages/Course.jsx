@@ -4,12 +4,12 @@ import { useState } from "react"
 import { useNavigate } from "react-router"
 import usePageTitle from "../hooks/usePageTitle"
 import { courseList } from "../utils/content"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
 
 const OnlineCourse = () => {
   usePageTitle("Kursus Online")
   const [search, setSearch] = useState("")
-  const { user, isCoursePurchased, getCourseProgress } = useAuth()
+  const { user, isCoursePurchased, getCourseProgress } = useApp()
   const navigate = useNavigate()
 
   const filteredCourses = courseList.filter((course) => course.title.toLowerCase().includes(search.toLowerCase()))
