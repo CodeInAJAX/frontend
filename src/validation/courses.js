@@ -30,6 +30,23 @@ export const createCourseSchema = z.object({
                 ACCEPTED_IMAGE_TYPES.includes(file.type) &&
                 file.size <= MAX_FILE_SIZE;
         }, {
-            message: "Foto thumbnail kursus harus berupa gambar JPG, JPEG, atau PNG dan maksimal berukuran 2MB"
+            message: "Foto thumbnail kursus harus berupa gambar JPG, JPEG, atau PNG dan maksimal berukuran 10MB"
         })
 })
+
+export const updateCourseSchema = createCourseSchema.extend({
+    thumbnail: z
+        .union([
+            z.instanceof(File).refine(
+                (file) =>
+                    ACCEPTED_IMAGE_TYPES.includes(file.type) &&
+                    file.size <= MAX_FILE_SIZE,
+                {
+                    message:
+                        "Foto thumbnail harus berupa gambar JPG, JPEG, atau PNG dan maksimal berukuran 10MB",
+                }
+            ),
+            z.string().url().optional(),
+        ])
+        .optional(),
+});
