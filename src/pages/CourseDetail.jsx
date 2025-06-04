@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router"
 import { courseList } from "../utils/content"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
 import { CheckCircle, Star } from "lucide-react"
 import RatingModal from "../components/RatingModal"
 import CourseRatings from "../components/CourseRatings"
@@ -19,7 +19,7 @@ const CourseDetail = () => {
     isLessonCompleted,
     isCourseCompleted,
     hasUserRatedCourse,
-  } = useAuth()
+  } = useApp()
 
   const courseId = Number.parseInt(id)
   const course = courseList.find((c) => c.id === courseId)
