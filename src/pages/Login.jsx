@@ -6,41 +6,82 @@ import { Link } from "react-router"
 import bgGrid from "../assets/bgGrid.png"
 import logo from "../assets/codeinajaLogo.svg"
 import usePageTitle from "../hooks/usePageTitle"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
+import {loginSchema} from "../validation/users.js";
+import z from "zod";
 
 const Login = () => {
   usePageTitle("Login")
   const navigate = useNavigate()
   const location = useLocation()
-  const { login } = useAuth()
+  const { login } = useApp()
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [statusMessage, setStatusMessage] = useState({ type: "", message: "" })
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    confirmPassword: ""
   })
-  const [error, setError] = useState("")
+  const [errors, setErrors] = useState({})
 
   // Get the redirect path from location state or default to homepage
   const from = location.state?.from || "/"
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+
+
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }))
+    }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setError("")
+    try {
+      setErrors({})
+      setIsSubmitting(true)
 
-    const result = login(formData.email, formData.password)
+      loginSchema.parse(formData)
 
-    if (result.success) {
-      // Redirect to the page they were trying to access or homepage
-      navigate(from)
-    } else {
-      setError(result.message || "Login gagal. Silakan coba lagi.")
+      const result = await login(formData)
+
+      if (result.success) {
+
+        // Redirect to the page they were trying to access or homepage
+        setStatusMessage({
+          type: "success",
+          message: "Berhasil melakukan login, halaman akan beralih ke beranda...",
+        })
+        setTimeout(() => {
+          navigate(from);
+        }, 200)
+      } else {
+        setStatusMessage({
+          type: "error",
+          message: result.message
+        })
+      }
+    } catch (zodError) {
+      const formattedErrors = {}
+      if (zodError instanceof z.ZodError) {
+        zodError.errors.forEach((err) => {
+          formattedErrors[err.path[0]] = err.message
+        })
+      }
+      setErrors(formattedErrors)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -56,7 +97,16 @@ const Login = () => {
           <p className="text-gray-400 text-sm mt-1 font-medium">Yuk mulai perjalanan belajarmu!</p>
         </div>
 
-        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+        {/* Status Message */}
+        {statusMessage.message && (
+            <div
+                className={`mb-4 p-3 rounded-lg text-sm ${
+                    statusMessage.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                }`}
+            >
+              {statusMessage.message}
+            </div>
+        )}
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <input
@@ -68,6 +118,7 @@ const Login = () => {
             onChange={handleChange}
             required
           />
+          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
           <input
             type="password"
             name="password"
@@ -77,8 +128,19 @@ const Login = () => {
             onChange={handleChange}
             required
           />
-          <button type="submit" className="submit-style">
-            Masuk
+          {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+          <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Masukkan Konfirmasi password"
+              className="input-style"
+              value={formData.confirmPassword || ""}
+              onChange={handleChange}
+              required
+          />
+          {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
+          <button type="submit" className="submit-style" disabled={isSubmitting}>
+            {isSubmitting ? "Memasuki..." : "Masuk"}
           </button>
         </form>
         <p className="text-center text-sm text-gray-600 mt-4">
