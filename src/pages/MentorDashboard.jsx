@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router"
 import usePageTitle from "../hooks/usePageTitle"
 import useMentorRedirect from "../hooks/useMentorRedirect"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
 import { courseList } from "../utils/content"
 
 import {
@@ -31,7 +31,7 @@ const MentorDashboard = () => {
   useMentorRedirect()
 
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout } = useApp()
 
   const handleLogout = () => {
     logout()
