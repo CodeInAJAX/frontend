@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router"
 import { courseList, paymentMethods } from "../utils/content"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
 import usePageTitle from "../hooks/usePageTitle"
 
 const Payment = () => {
   usePageTitle("Pembayaran")
   const { id } = useParams()
   const navigate = useNavigate()
-  const { user, purchaseCourse, isCoursePurchased } = useAuth()
+  const { user, purchaseCourse, isCoursePurchased } = useApp()
 
   const courseId = Number.parseInt(id)
   const course = courseList.find((c) => c.id === courseId)
