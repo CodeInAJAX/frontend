@@ -4,11 +4,10 @@ import logo from "../assets/codeinajaLogo.svg"
 import usePageTitle from "../hooks/usePageTitle"
 import useRole from "../hooks/useRole"
 import { useEffect, useState } from "react"
-import { register as registerSchema } from "../validation/users.js"
+import { registerSchema } from "../validation/users.js"
 import z from "zod"
-import {register} from "../api/users/apiV1.js";
+import {registerAPI} from "../api/users/v1.js";
 import useGender from "../hooks/useGender.jsx";
-import {uploadsProfile} from "../api/uploads/apiV1.js";
 
 const Register = () => {
   usePageTitle("Register")
@@ -73,10 +72,9 @@ const Register = () => {
 
       setIsSubmitting(true)
       setStatusMessage({ type: "", message: "" })
-
       try {
-        // Upload photo and get public URL
-        const photoUrl = await uploadsProfile(formData.photo)
+        // default photo profile
+        const photoUrl = `${window.location.origin}/assets/profile.jpg`;
 
         // Format data to send request api
         const userData = {
@@ -85,10 +83,10 @@ const Register = () => {
           password: formData.password,
           role: formData.role,
           gender: formData.gender,
-          photoUrl: photoUrl,
-        }
+          photo: photoUrl,
 
-        const response = await register(userData);
+        }
+        const response = await registerAPI(userData);
 
         setStatusMessage({
           type: "success",
@@ -105,10 +103,16 @@ const Register = () => {
           photo: null,
         })
 
+        setStatusMessage({
+          type: "success",
+          message: "Berhasil registrasi, halaman akan beralih ke login...",
+        })
+
         // Redirect to log in
         setTimeout(() => {
           window.location.href = "/login"
-        }, 1000)
+        }, 200)
+
       } catch (error) {
         console.error("Registration error:", error)
         setStatusMessage({
@@ -256,7 +260,7 @@ const Register = () => {
           </form>
           <p className="text-center text-sm text-gray-600 mt-4">
             Sudah punya akun?{" "}
-            <a href="/" className="text-orange-500 font-medium">
+            <a href="/login" className="text-orange-500 font-medium">
               Masuk
             </a>
           </p>
