@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useAuth } from "../context/authContext"
+import { useApp } from "../context/appContext.jsx"
 import usePageTitle from "../hooks/usePageTitle"
 import EditProfileModal from "../components/EditProfileModal"
 import { courseList } from "../utils/content"
@@ -10,7 +10,7 @@ import { Link } from "react-router"
 
 const UserProfile = () => {
   usePageTitle("Profil Pengguna")
-  const { user, isCoursePurchased, getCourseProgress, getCourseRatings } = useAuth()
+  const { user, isCoursePurchased, getCourseProgress, getCourseRatings } = useApp()
   const [showEditModal, setShowEditModal] = useState(false)
 
   if (!user) {
@@ -28,17 +28,6 @@ const UserProfile = () => {
 
   // Get user's purchased courses
   const userCourses = courseList.filter((course) => isCoursePurchased(course.id))
-
-  // Get initials for avatar fallback
-  const getInitials = () => {
-    if (!user.name) return "U"
-    return user.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2)
-  }
 
   // Calculate total progress across all courses
   const calculateTotalProgress = () => {
@@ -79,9 +68,11 @@ const UserProfile = () => {
                   className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-orange-100"
                 />
               ) : (
-                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-orange-500 flex items-center justify-center text-white text-3xl font-medium border-4 border-orange-100">
-                  {getInitials()}
-                </div>
+                  <img
+                      src="/assets/profile.jpg"
+                      alt={user.name}
+                      className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-orange-100"
+                  />
               )}
             </div>
 
